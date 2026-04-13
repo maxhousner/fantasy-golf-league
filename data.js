@@ -108,7 +108,10 @@ const MANAGERS = [
     id: "manager_2",
     name: "Player 2",             // <-- replace with manager name
     golfers: {
-      the_masters: [],
+      the_masters: [
+        "Jon Rahm",
+        "Ludvig Åberg",
+      ],
       pga_championship: [
         "Jon Rahm",
         "Ludvig Åberg",
