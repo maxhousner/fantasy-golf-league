@@ -10,7 +10,7 @@
 //
 //  ACTIVE TOURNAMENT:
 //  Change this to switch which event the dashboard displays.
-//  Options: "pga_championship" | "us_open" | "the_open"
+//  Options: "masters" | "pga_championship" | "us_open" | "the_open"
 // ============================================================
 
 const ACTIVE_TOURNAMENT = "pga_championship";
@@ -22,24 +22,31 @@ const ACTIVE_TOURNAMENT = "pga_championship";
 // ============================================================
 
 const TOURNAMENTS = {
+  the_masters: {
+    name: "The Masters",
+    shortName: "The Masters",
+    espnEventId: "401811941",
+    location: "Augusta National Golf Club, Augusta, GA",
+    dates: "April 2026",
+  },
   pga_championship: {
     name: "PGA Championship",
     shortName: "PGA Champ.",
-    espnEventId: "401580351",   // 2025 PGA Championship
+    espnEventId: "401811947",
     location: "Quail Hollow Club, Charlotte, NC",
     dates: "May 15–18, 2025",
   },
   us_open: {
     name: "U.S. Open",
     shortName: "U.S. Open",
-    espnEventId: "401580353",   // 2025 U.S. Open — update if needed
+    espnEventId: "401811952",
     location: "Oakmont Country Club, Oakmont, PA",
     dates: "June 12–15, 2025",
   },
   the_open: {
     name: "The Open Championship",
     shortName: "The Open",
-    espnEventId: "401580354",   // 2025 The Open — update if needed
+    espnEventId: "401811957",
     location: "Royal Portrush Golf Club, Northern Ireland",
     dates: "July 17–20, 2025",
   },
@@ -54,8 +61,8 @@ const TOURNAMENTS = {
 const LEAGUE_SETTINGS = {
   leagueName: "Sub-Par Golf Association",
   leagueShortName: "SPGA",
-  season: "2025",
-  rosterSize: 6,   // <-- change this before each draft
+  season: "2026",
+  rosterSize: 5,   // <-- change this before each draft
 };
 
 // ============================================================
@@ -79,8 +86,12 @@ const LEAGUE_SETTINGS = {
 const MANAGERS = [
   {
     id: "manager_1",
-    name: "Commissioner",          // <-- replace with your name
+    name: "Max Housner",          // <-- replace with your name
     golfers: {
+      the_masters: [
+        "Scottie Scheffler",
+        "Rory McIlroy",
+      ],
       pga_championship: [
         "Scottie Scheffler",
         "Rory McIlroy",
@@ -97,6 +108,7 @@ const MANAGERS = [
     id: "manager_2",
     name: "Player 2",             // <-- replace with manager name
     golfers: {
+      the_masters: [],
       pga_championship: [
         "Jon Rahm",
         "Ludvig Åberg",
@@ -113,6 +125,7 @@ const MANAGERS = [
     id: "manager_3",
     name: "Player 3",
     golfers: {
+      the_masters: [],
       pga_championship: [],
       us_open: [],
       the_open: [],
@@ -122,6 +135,7 @@ const MANAGERS = [
     id: "manager_4",
     name: "Player 4",
     golfers: {
+      the_masters: [],
       pga_championship: [],
       us_open: [],
       the_open: [],
@@ -131,6 +145,7 @@ const MANAGERS = [
     id: "manager_5",
     name: "Player 5",
     golfers: {
+      the_masters: [],
       pga_championship: [],
       us_open: [],
       the_open: [],
@@ -140,42 +155,7 @@ const MANAGERS = [
     id: "manager_6",
     name: "Player 6",
     golfers: {
-      pga_championship: [],
-      us_open: [],
-      the_open: [],
-    },
-  },
-  {
-    id: "manager_7",
-    name: "Player 7",
-    golfers: {
-      pga_championship: [],
-      us_open: [],
-      the_open: [],
-    },
-  },
-  {
-    id: "manager_8",
-    name: "Player 8",
-    golfers: {
-      pga_championship: [],
-      us_open: [],
-      the_open: [],
-    },
-  },
-  {
-    id: "manager_9",
-    name: "Player 9",
-    golfers: {
-      pga_championship: [],
-      us_open: [],
-      the_open: [],
-    },
-  },
-  {
-    id: "manager_10",
-    name: "Player 10",
-    golfers: {
+      the_masters: [],
       pga_championship: [],
       us_open: [],
       the_open: [],
@@ -193,6 +173,14 @@ const MANAGERS = [
 // ============================================================
 
 const DRAFT_LOG = {
+  the_masters: {
+    round_1: [],
+    round_2: [],
+    round_3: [],
+    round_4: [],
+    round_5: [],
+    round_6: [],
+  },
   pga_championship: {
     round_1: [
       // "Manager Name",   // Pick 1

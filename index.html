@@ -18,7 +18,7 @@
         <span class="brand-abbr">SPGA</span>
         <div class="brand-text">
           <span class="brand-full">Sub-Par Golf Association</span>
-          <span class="brand-season">2025 Season · Majors League</span>
+          <span class="brand-season">2026 Season · Majors League</span>
         </div>
       </div>
       <div class="header-actions">
@@ -45,6 +45,7 @@
         <p id="tournament-meta" class="tournament-meta"></p>
       </div>
       <div class="banner-nav">
+        <button class="tourney-tab" onclick="switchTournament('the_masters')">The Masters</button>
         <button class="tourney-tab" onclick="switchTournament('pga_championship')">PGA Champ.</button>
         <button class="tourney-tab" onclick="switchTournament('us_open')">U.S. Open</button>
         <button class="tourney-tab" onclick="switchTournament('the_open')">The Open</button>
@@ -78,9 +79,7 @@
 
   <!-- ========== FOOTER ========== -->
   <footer class="site-footer">
-    <span>SPGA · Sub-Par Golf Association · 2025</span>
-    <span class="footer-divider">·</span>
-    <span>Live scores via ESPN</span>
+    <span>Created by Max Housner · 2026 · Live scores via ESPN</span>
   </footer>
 
   <!-- Scripts: data.js must load before app.js -->
@@ -107,7 +106,7 @@
     // Set initial active tab on load
     document.addEventListener('DOMContentLoaded', () => {
       document.querySelectorAll('.tourney-tab').forEach((btn, i) => {
-        const keys = ['pga_championship', 'us_open', 'the_open'];
+        const keys = ['the_masters', 'pga_championship', 'us_open', 'the_open'];
         btn.classList.toggle('active', keys[i] === ACTIVE_TOURNAMENT);
       });
     });
