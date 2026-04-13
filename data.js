@@ -13,11 +13,11 @@
 //  Options: "masters" | "pga_championship" | "us_open" | "the_open"
 // ============================================================
 
-const ACTIVE_TOURNAMENT = "pga_championship";
+const ACTIVE_TOURNAMENT = "the_masters";
 
 // ============================================================
 //  TOURNAMENT DEFINITIONS
-//  espnEventId: The ESPN event ID used to fetch live scores.
+//  espnEventId: The ESPN event ID used to  live scores.
 //  Update these IDs each year if needed.
 // ============================================================
 
