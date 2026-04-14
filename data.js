@@ -1,10 +1,10 @@
 // ============================================================
 //  SPGA — Sub-Par Golf Association
-//  data.js  |  Edit this file to manage league
+//  data.js  |  Edit this file to manage the league
 // ============================================================
 
 // ============================================================
-//  ACTIVE TOURNAMENT:
+//  ACTIVE TOURNAMENT
 //  Options: "the_masters" | "pga_championship" | "us_open" | "the_open"
 // ============================================================
 
@@ -18,11 +18,14 @@ const LEAGUE_SETTINGS = {
   leagueName: "Sub-Par Golf Association",
   leagueShortName: "SPGA",
   season: "2026",
-  rosterSize: 5,   // <-- change this before each draft
+  rosterSize: 5,
 };
 
 // ============================================================
 //  TOURNAMENT DEFINITIONS
+//
+//  startDate / endDate: YYYYMMDD format (no dashes)
+//  espnEventId: from the ESPN scoreboard calendar
 // ============================================================
 
 const TOURNAMENTS = {
@@ -31,39 +34,39 @@ const TOURNAMENTS = {
     shortName: "The Masters",
     espnEventId: "401811941",
     location: "Augusta National Golf Club, Augusta, GA",
-    startDate: "2026-04-09",
-    endDate: "2026-04-12",
+    startDate: "20260409",
+    endDate:   "20260412",
   },
   pga_championship: {
     name: "PGA Championship",
     shortName: "PGA Champ",
     espnEventId: "401811947",
     location: "Aronimink Golf Club, Newtown Square, PA",
-    startDate: "2026-05-14",
-    endDate: "2026-05-17",
+    startDate: "20260514",
+    endDate:   "20260517",
   },
   us_open: {
     name: "U.S. Open",
     shortName: "U.S. Open",
     espnEventId: "401811952",
     location: "Shinnecock Hills Golf Club, Southampton, NY",
-    dates: "June 18–21, 2026",
-    startDate: "2026-06-18",
-    endDate: "2026-06-21",
+    startDate: "20260618",
+    endDate:   "20260621",
   },
   the_open: {
     name: "The Open Championship",
     shortName: "The Open",
     espnEventId: "401811957",
     location: "Royal Birkdale Golf Club, Southport, England",
-    dates: "July 16–19, 2026",
-    startDate: "2026-07-16",
-    endDate: "2026-07-19",
+    startDate: "20260716",
+    endDate:   "20260719",
   },
 };
 
 // ============================================================
 //  MANAGERS & ROSTERS
+//
+//  Golfer names must match ESPN displayName exactly.
 // ============================================================
 
 const MANAGERS = [
@@ -139,7 +142,7 @@ const MANAGERS = [
         "Bubba Watson",
         "Keegan Bradley",
         "Tyrrell Hatton",
-        "Sami Valimaki",
+        "Sami Välimäki",
         "Nicolai Højgaard",
       ],
       pga_championship: [],
@@ -172,44 +175,12 @@ const MANAGERS = [
 ];
 
 // ============================================================
-//  SNAKE DRAFT ORDER  (optional — for reference)
+//  DRAFT LOG  (reference only — does not affect scoring)
 // ============================================================
 
 const DRAFT_LOG = {
-  the_masters: {
-    round_1: [],
-    round_2: [],
-    round_3: [],
-    round_4: [],
-    round_5: [],
-    round_6: [],
-  },
-  pga_championship: {
-    round_1: [
-      // "Manager Name",   // Pick 1
-      // "Manager Name",   // Pick 2
-      // ... fill in after draft
-    ],
-    round_2: [],
-    round_3: [],
-    round_4: [],
-    round_5: [],
-    round_6: [],
-  },
-  us_open: {
-    round_1: [],
-    round_2: [],
-    round_3: [],
-    round_4: [],
-    round_5: [],
-    round_6: [],
-  },
-  the_open: {
-    round_1: [],
-    round_2: [],
-    round_3: [],
-    round_4: [],
-    round_5: [],
-    round_6: [],
-  },
+  the_masters:      { round_1: [], round_2: [], round_3: [], round_4: [], round_5: [] },
+  pga_championship: { round_1: [], round_2: [], round_3: [], round_4: [], round_5: [] },
+  us_open:          { round_1: [], round_2: [], round_3: [], round_4: [], round_5: [] },
+  the_open:         { round_1: [], round_2: [], round_3: [], round_4: [], round_5: [] },
 };

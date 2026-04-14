@@ -39,7 +39,6 @@
   <!-- ========== TOURNAMENT BANNER ========== -->
   <section class="tournament-banner">
     <div class="banner-inner">
-      <!-- <div class="banner-flag">MAJOR</div> -->
       <div class="banner-info">
         <h1 id="tournament-name" class="tournament-name">—</h1>
         <p id="tournament-meta" class="tournament-meta"></p>
@@ -53,9 +52,6 @@
     </div>
   </section>
 
-  <!-- ========== ERROR BANNER ========== -->
-  <div id="error-banner" class="error-banner" style="display:none"></div>
-
   <!-- ========== LEADERBOARD ========== -->
   <main class="leaderboard-wrap">
     <table class="leaderboard-table">
@@ -63,15 +59,18 @@
         <tr>
           <th class="th-rank">POS</th>
           <th class="th-name">MANAGER</th>
-          <th class="th-score">COMBINED</th>
-          <th class="th-score">BEST BALL</th>
-          <th class="th-golfer">BB LEADER</th>
+          <th class="th-score th-sortable sort-active" data-sort="combined" onclick="setSortBy('combined')">
+            COMBINED <span class="sort-arrow">▼</span>
+          </th>
+          <th class="th-score th-sortable" data-sort="bestball" onclick="setSortBy('bestball')">
+            BEST BALL <span class="sort-arrow">▼</span>
+          </th>
           <th class="th-expand"></th>
         </tr>
       </thead>
       <tbody id="leaderboard-body">
         <tr>
-          <td colspan="6" class="loading-cell">Loading scores…</td>
+          <td colspan="5" class="loading-cell">Loading scores…</td>
         </tr>
       </tbody>
     </table>
@@ -82,28 +81,23 @@
     <span>Created by Max Housner · 2026 · Live scores via ESPN</span>
   </footer>
 
-  <!-- Scripts: data.js must load before app.js -->
   <script src="data.js"></script>
   <script src="app.js"></script>
 
-  <!-- Tournament switcher (needs ACTIVE_TOURNAMENT to be mutable) -->
   <script>
     function switchTournament(key) {
-      // Update the active tournament and re-fetch
       ACTIVE_TOURNAMENT = key;
-
-      // Highlight active tab
       document.querySelectorAll('.tourney-tab').forEach((btn, i) => {
         const keys = ['the_masters', 'pga_championship', 'us_open', 'the_open'];
         btn.classList.toggle('active', keys[i] === key);
       });
-
-      // Reset expanded state and re-init
-      if (window.state) window.state.expandedManager = null;
+      if (window.state) {
+        window.state.expandedManager = null;
+        window.state.expandedGolfer  = null;
+      }
       fetchScores();
     }
 
-    // Set initial active tab on load
     document.addEventListener('DOMContentLoaded', () => {
       document.querySelectorAll('.tourney-tab').forEach((btn, i) => {
         const keys = ['the_masters', 'pga_championship', 'us_open', 'the_open'];
