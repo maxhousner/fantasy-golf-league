@@ -8,4 +8,4 @@ ESPN API + Scoring Engine + UI Controller
 Manage Rosters + Managers + Active Tournament
 
 ### index.html / style.css
-HTML UI and CSS style sheet
+HTML UI + CSS style sheet
