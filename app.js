@@ -408,7 +408,7 @@ function renderLeaderboard() {
         <td class="rank-cell">${result.rank}</td>
         <td class="name-cell">
           <span class="manager-name">${result.manager.name}</span>
-          <span class="roster-count">${hasRoster ? `${result.golferNames.length} golfers` : "No roster"}</span>
+          <span class="roster-count">${hasRoster ? `${result.manager.teamName}` : "No roster"}</span>
         </td>
         <td class="score-cell ${scoreClass(result.combined.total)}">
           <span class="score-primary">${result.combined.totalDisplay}</span>

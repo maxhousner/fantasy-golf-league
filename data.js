@@ -1,59 +1,14 @@
 // ============================================================
 //  SPGA — Sub-Par Golf Association
-//  data.js  |  Edit this file to manage your league
+//  data.js  |  Edit this file to manage league
 // ============================================================
-//
-//  HOW TO UPDATE ROSTERS:
-//  1. Edit the managers and their golfers below
-//  2. Save the file
-//  3. Git add, commit, and push to update the live site
-//
+
+// ============================================================
 //  ACTIVE TOURNAMENT:
-//  Change this to switch which event the dashboard displays.
 //  Options: "the_masters" | "pga_championship" | "us_open" | "the_open"
 // ============================================================
 
 let ACTIVE_TOURNAMENT = "the_masters";
-
-// ============================================================
-//  TOURNAMENT DEFINITIONS
-//  espnEventId: The ESPN event ID used to  live scores.
-// ============================================================
-
-const TOURNAMENTS = {
-  the_masters: {
-    name: "The Masters",
-    shortName: "The Masters",
-    espnEventId: "401811941",
-    location: "Augusta National Golf Club, Augusta, GA",
-    dates: "April 9-12, 2026",
-    finalScores: {},
-  },
-  pga_championship: {
-    name: "PGA Championship",
-    shortName: "PGA Champ",
-    espnEventId: "401811947",
-    location: "Aronimink Golf Club, Newtown Square, PA",
-    dates: "May 14–17, 2026",
-    finalScores: {},
-  },
-  us_open: {
-    name: "U.S. Open",
-    shortName: "U.S. Open",
-    espnEventId: "401811952",
-    location: "Shinnecock Hills Golf Club, Southampton, NY",
-    dates: "June 18–21, 2026",
-    finalScores: {},
-  },
-  the_open: {
-    name: "The Open Championship",
-    shortName: "The Open",
-    espnEventId: "401811957",
-    location: "Royal Birkdale Golf Club, Southport, England",
-    dates: "July 16–19, 2026",
-    finalScores: {},
-  },
-};
 
 // ============================================================
 //  LEAGUE SETTINGS
@@ -67,27 +22,55 @@ const LEAGUE_SETTINGS = {
 };
 
 // ============================================================
+//  TOURNAMENT DEFINITIONS
+// ============================================================
+
+const TOURNAMENTS = {
+  the_masters: {
+    name: "The Masters",
+    shortName: "The Masters",
+    espnEventId: "401811941",
+    location: "Augusta National Golf Club, Augusta, GA",
+    startDate: "2026-04-09",
+    endDate: "2026-04-12",
+  },
+  pga_championship: {
+    name: "PGA Championship",
+    shortName: "PGA Champ",
+    espnEventId: "401811947",
+    location: "Aronimink Golf Club, Newtown Square, PA",
+    startDate: "2026-05-14",
+    endDate: "2026-05-17",
+  },
+  us_open: {
+    name: "U.S. Open",
+    shortName: "U.S. Open",
+    espnEventId: "401811952",
+    location: "Shinnecock Hills Golf Club, Southampton, NY",
+    dates: "June 18–21, 2026",
+    startDate: "2026-06-18",
+    endDate: "2026-06-21",
+  },
+  the_open: {
+    name: "The Open Championship",
+    shortName: "The Open",
+    espnEventId: "401811957",
+    location: "Royal Birkdale Golf Club, Southport, England",
+    dates: "July 16–19, 2026",
+    startDate: "2026-07-16",
+    endDate: "2026-07-19",
+  },
+};
+
+// ============================================================
 //  MANAGERS & ROSTERS
-//
-//  Each manager has:
-//    - id:      unique slug, no spaces (used internally)
-//    - name:    display name shown on the dashboard
-//    - golfers: object with one array per tournament
-//               Each golfer entry is the player's full name
-//               exactly as it appears on ESPN.
-//
-//  To clear rosters for a new tournament, replace the
-//  golfer arrays with empty arrays: []
-//
-//  EXAMPLE GOLFER NAME FORMAT:
-//    "Scottie Scheffler"  ✓
-//    "scheffler"          ✗  (won't match ESPN data)
 // ============================================================
 
 const MANAGERS = [
   {
     id: "manager_1",
     name: "Max",
+    teamName: "Bunker? I Barely Know Her",
     golfers: {
       the_masters: [
         "Scottie Scheffler",
@@ -110,6 +93,7 @@ const MANAGERS = [
   {
     id: "manager_2",
     name: "Bennett",
+    teamName: "BENNETT'S BOYS",
     golfers: {
       the_masters: [
         "Scottie Scheffler",
@@ -132,6 +116,7 @@ const MANAGERS = [
   {
     id: "manager_3",
     name: "Paul",
+    teamName: "I'm Brandon!",
     golfers: {
       the_masters: [
         "Scottie Scheffler",
@@ -148,6 +133,7 @@ const MANAGERS = [
   {
     id: "manager_4",
     name: "Rehan",
+    teamName: "re-birdie",
     golfers: {
       the_masters: [
         "Bubba Watson",
@@ -164,6 +150,7 @@ const MANAGERS = [
   {
     id: "manager_5",
     name: "Alex",
+    teamName: "[team name]",
     golfers: {
       the_masters: [],
       pga_championship: [],
@@ -174,6 +161,7 @@ const MANAGERS = [
   {
     id: "manager_6",
     name: "Will",
+    teamName: "[team name]",
     golfers: {
       the_masters: [],
       pga_championship: [],
@@ -185,11 +173,6 @@ const MANAGERS = [
 
 // ============================================================
 //  SNAKE DRAFT ORDER  (optional — for reference)
-//
-//  Record your draft order here after each draft.
-//  Round 1: picks 1–10 (or however many managers)
-//  Round 2: picks reverse (snake back)
-//  This is just a reference log — it doesn't affect scoring.
 // ============================================================
 
 const DRAFT_LOG = {

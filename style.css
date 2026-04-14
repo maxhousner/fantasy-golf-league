@@ -246,7 +246,7 @@ html, body {
 /* ---- Leaderboard ---- */
 .leaderboard-wrap {
   max-width: 960px;
-  margin: 24px auto 40px;
+  margin: 24px auto 24px;
   padding: 0 20px;
 }
 
@@ -276,10 +276,10 @@ html, body {
   white-space: nowrap;
 }
 
-.th-rank    { width: 48px; text-align: center; }
-.th-score   { width: 110px; text-align: center; }
-.th-golfer  { width: 130px; }
-.th-expand  { width: 32px; }
+.leaderboard-table .th-rank    { width: 48px; text-align: center; }
+.leaderboard-table .th-score   { width: 110px; text-align: center; }
+.leaderboard-table .th-golfer  { width: 130px; }
+.leaderboard-table .th-expand  { width: 32px; }
 
 /* Manager rows */
 .manager-row {
