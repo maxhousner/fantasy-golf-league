@@ -10,7 +10,7 @@
 //
 //  ACTIVE TOURNAMENT:
 //  Change this to switch which event the dashboard displays.
-//  Options: "masters" | "pga_championship" | "us_open" | "the_open"
+//  Options: "the_masters" | "pga_championship" | "us_open" | "the_open"
 // ============================================================
 
 const ACTIVE_TOURNAMENT = "the_masters";
@@ -18,7 +18,6 @@ const ACTIVE_TOURNAMENT = "the_masters";
 // ============================================================
 //  TOURNAMENT DEFINITIONS
 //  espnEventId: The ESPN event ID used to  live scores.
-//  Update these IDs each year if needed.
 // ============================================================
 
 const TOURNAMENTS = {
@@ -27,35 +26,33 @@ const TOURNAMENTS = {
     shortName: "The Masters",
     espnEventId: "401811941",
     location: "Augusta National Golf Club, Augusta, GA",
-    dates: "April 2026",
+    dates: "April 9-12, 2026",
   },
   pga_championship: {
     name: "PGA Championship",
     shortName: "PGA Champ.",
     espnEventId: "401811947",
-    location: "Quail Hollow Club, Charlotte, NC",
-    dates: "May 15–18, 2025",
+    location: "Aronimink Golf Club, Newtown Square, PA",
+    dates: "May 14–17, 2026",
   },
   us_open: {
     name: "U.S. Open",
     shortName: "U.S. Open",
     espnEventId: "401811952",
-    location: "Oakmont Country Club, Oakmont, PA",
-    dates: "June 12–15, 2025",
+    location: "Shinnecock Hills Golf Club, Southampton, NY",
+    dates: "June 18–21, 2026",
   },
   the_open: {
     name: "The Open Championship",
     shortName: "The Open",
     espnEventId: "401811957",
-    location: "Royal Portrush Golf Club, Northern Ireland",
-    dates: "July 17–20, 2025",
+    location: "Royal Birkdale Golf Club, Southport, England",
+    dates: "July 16–19, 2026",
   },
 };
 
 // ============================================================
 //  LEAGUE SETTINGS
-//  rosterSize: how many golfers each manager drafts per Major.
-//  Change this before each event's draft.
 // ============================================================
 
 const LEAGUE_SETTINGS = {
@@ -86,11 +83,14 @@ const LEAGUE_SETTINGS = {
 const MANAGERS = [
   {
     id: "manager_1",
-    name: "Max Housner",          // <-- replace with your name
+    name: "Max",
     golfers: {
       the_masters: [
         "Scottie Scheffler",
-        "Rory McIlroy",
+        "Collin Morikawa",
+        "Justin Rose",
+        "Ben Griffin",
+        "Akshay Bhatia",
       ],
       pga_championship: [
         "Scottie Scheffler",
@@ -98,7 +98,6 @@ const MANAGERS = [
         "Xander Schauffele",
         "Collin Morikawa",
         "Tommy Fleetwood",
-        "Shane Lowry",
       ],
       us_open: [],
       the_open: [],
@@ -106,11 +105,14 @@ const MANAGERS = [
   },
   {
     id: "manager_2",
-    name: "Player 2",             // <-- replace with manager name
+    name: "Bennett",
     golfers: {
       the_masters: [
-        "Jon Rahm",
-        "Ludvig Åberg",
+        "Scottie Scheffler",
+        "Patrick Cantlay",
+        "Tommy Fleetwood",
+        "Ben Griffin",
+        "Justin Rose",
       ],
       pga_championship: [
         "Jon Rahm",
@@ -118,7 +120,6 @@ const MANAGERS = [
         "Viktor Hovland",
         "Tyrrell Hatton",
         "Matt Fitzpatrick",
-        "Cameron Young",
       ],
       us_open: [],
       the_open: [],
@@ -126,9 +127,15 @@ const MANAGERS = [
   },
   {
     id: "manager_3",
-    name: "Player 3",
+    name: "Paul",
     golfers: {
-      the_masters: [],
+      the_masters: [
+        "Scottie Scheffler",
+        "Bryson DeChambeau",
+        "Corey Conners",
+        "Chris Gotterup",
+        "Ludvig Åberg",
+      ],
       pga_championship: [],
       us_open: [],
       the_open: [],
@@ -136,9 +143,15 @@ const MANAGERS = [
   },
   {
     id: "manager_4",
-    name: "Player 4",
+    name: "Rehan",
     golfers: {
-      the_masters: [],
+      the_masters: [
+        "Bubba Watson",
+        "Keegan Bradley",
+        "Tyrrell Hatton",
+        "Sami Valimaki",
+        "Nicolai Højgaard",
+      ],
       pga_championship: [],
       us_open: [],
       the_open: [],
@@ -146,7 +159,7 @@ const MANAGERS = [
   },
   {
     id: "manager_5",
-    name: "Player 5",
+    name: "Alex",
     golfers: {
       the_masters: [],
       pga_championship: [],
@@ -156,7 +169,7 @@ const MANAGERS = [
   },
   {
     id: "manager_6",
-    name: "Player 6",
+    name: "Will",
     golfers: {
       the_masters: [],
       pga_championship: [],
