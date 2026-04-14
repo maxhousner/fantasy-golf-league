@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SPGA — Sub-Par Golf Association</title>
+  <title>SPGA Fantasy Golf League</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
@@ -46,7 +46,7 @@
       </div>
       <div class="banner-nav">
         <button class="tourney-tab" onclick="switchTournament('the_masters')">The Masters</button>
-        <button class="tourney-tab" onclick="switchTournament('pga_championship')">PGA Champ.</button>
+        <button class="tourney-tab" onclick="switchTournament('pga_championship')">PGA Champ</button>
         <button class="tourney-tab" onclick="switchTournament('us_open')">U.S. Open</button>
         <button class="tourney-tab" onclick="switchTournament('the_open')">The Open</button>
       </div>
@@ -90,7 +90,7 @@
   <script>
     function switchTournament(key) {
       // Update the active tournament and re-fetch
-      window.ACTIVE_TOURNAMENT = key;
+      ACTIVE_TOURNAMENT = key;
 
       // Highlight active tab
       document.querySelectorAll('.tourney-tab').forEach((btn, i) => {

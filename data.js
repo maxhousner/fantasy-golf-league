@@ -13,7 +13,7 @@
 //  Options: "the_masters" | "pga_championship" | "us_open" | "the_open"
 // ============================================================
 
-const ACTIVE_TOURNAMENT = "the_masters";
+let ACTIVE_TOURNAMENT = "the_masters";
 
 // ============================================================
 //  TOURNAMENT DEFINITIONS
@@ -27,13 +27,15 @@ const TOURNAMENTS = {
     espnEventId: "401811941",
     location: "Augusta National Golf Club, Augusta, GA",
     dates: "April 9-12, 2026",
+    finalScores: {},
   },
   pga_championship: {
     name: "PGA Championship",
-    shortName: "PGA Champ.",
+    shortName: "PGA Champ",
     espnEventId: "401811947",
     location: "Aronimink Golf Club, Newtown Square, PA",
     dates: "May 14–17, 2026",
+    finalScores: {},
   },
   us_open: {
     name: "U.S. Open",
@@ -41,6 +43,7 @@ const TOURNAMENTS = {
     espnEventId: "401811952",
     location: "Shinnecock Hills Golf Club, Southampton, NY",
     dates: "June 18–21, 2026",
+    finalScores: {},
   },
   the_open: {
     name: "The Open Championship",
@@ -48,6 +51,7 @@ const TOURNAMENTS = {
     espnEventId: "401811957",
     location: "Royal Birkdale Golf Club, Southport, England",
     dates: "July 16–19, 2026",
+    finalScores: {},
   },
 };
 

@@ -38,6 +38,19 @@ async function fetchScores() {
 
   setLoading(true);
 
+  // Use stored final scores if available — skips ESPN entirely
+  if (tournament.finalScores && Object.keys(tournament.finalScores).length > 0) {
+    state.playerScores = parseFinalScores(tournament.finalScores);
+    state.fieldEmpty = false;
+    state.fromCache = false;
+    state.leaderboard = computeLeaderboard();
+    state.lastUpdated = new Date();
+    state.error = null;
+    setLoading(false);
+    render();
+    return;
+  }
+
   const url = `${ESPN_BASE}?event=${tournament.espnEventId}`;
 
   let data;
@@ -72,6 +85,12 @@ function parseESPNData(data) {
     if (!events || events.length === 0) return scores;
 
     const competitors = events[0]?.competitions?.[0]?.competitors ?? [];
+
+    if (competitors.length === 0) {
+      state.fieldEmpty = true;
+      return scores;
+    }
+    state.fieldEmpty = false;
 
     for (const competitor of competitors) {
       const name = competitor.athlete?.displayName;
@@ -147,6 +166,24 @@ function isWithdrawn(status) {
   if (!status) return false;
   const s = status.toLowerCase();
   return s.includes("withdraw") || s === "wd" || s === "dq";
+}
+
+function parseFinalScores(finalScores) {
+  const scores = {};
+  for (const [name, data] of Object.entries(finalScores)) {
+    const val = data.toPar ?? 0;
+    scores[name] = {
+      name,
+      rounds: [],
+      total: null,
+      toPar: formatToParDisplay(val),
+      toParValue: val,
+      status: data.missedCut ? "cut" : "active",
+      position: "--",
+      missedCut: data.missedCut ?? false,
+    };
+  }
+  return scores;
 }
 
 // ============================================================
@@ -353,6 +390,12 @@ function renderLeaderboard() {
 
   let html = "";
 
+  if (state.fieldEmpty) {
+    html += `<tr><td colspan="6" class="loading-cell" style="padding: 12px 20px; border-bottom: 1px solid var(--border);">
+      Field not yet announced — rosters are set but scores will appear closer to event week.
+    </td></tr>`;
+  }
+
   for (const result of state.leaderboard) {
     const isExpanded = state.expandedManager === result.manager.id;
     const hasRoster = result.golferNames.length > 0;
@@ -393,15 +436,16 @@ function renderLeaderboard() {
         const g = state.playerScores[name];
         const found = !!g;
         const missed = found && g.missedCut;
+        const notYetStarted = !found && state.fieldEmpty;
 
         html += `
           <div class="golfer-card ${missed ? "cut" : ""} ${!found ? "not-found" : ""}">
             <div class="golfer-name">${name}${missed ? ' <span class="cut-badge">CUT</span>' : ""}</div>
             <div class="golfer-score ${found ? scoreClass(g.toParValue) : ""}">
-              ${found ? g.toPar : "Not in field"}
+              ${found ? g.toPar : notYetStarted ? "--" : "Not in field"}
             </div>
             ${found ? `<div class="golfer-position">${g.position}</div>` : ""}
-            ${found && g.rounds.length > 0
+            ${found && g.length > 0
               ? `<div class="golfer-rounds">${g.rounds.map((r, i) => `R${i + 1}: ${r}`).join(" · ")}</div>`
               : ""}
           </div>`;
