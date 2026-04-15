@@ -95,7 +95,8 @@
       });
       if (window.state) {
         window.state.expandedManager = null;
-        window.state.expandedGolfer  = null;
+        window.state.expandedGolfers.clear();
+        window.state.bbHighlight.clear();
       }
       fetchScores();
     }

@@ -367,35 +367,98 @@ html, body {
   margin-top: 4px;
 }
 
-/* ---- Golfer Cards ---- */
-.detail-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
-  gap: 10px;
+/* ---- Golfer List ---- */
+.golfer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
   margin-bottom: 20px;
-}
-
-.golfer-card {
-  background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  padding: 12px 14px;
-  cursor: pointer;
-  transition: border-color 0.15s;
+  overflow: hidden;
 }
 
-.golfer-card:hover     { border-color: var(--text-muted); }
-.golfer-card.cut       { opacity: 0.55; border-style: dashed; }
-.golfer-card.not-found { border-color: var(--amber-dim); opacity: 0.6; }
+.golfer-list-item {
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.golfer-list-item:last-child {
+  border-bottom: none;
+}
+
+.golfer-list-item.cut       { opacity: 0.6; }
+.golfer-list-item.not-found { opacity: 0.5; }
+.golfer-list-item.expanded  { background: var(--bg-surface); }
+
+.golfer-list-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.golfer-list-main:hover { background: var(--bg-row); }
+
+.golfer-list-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.golfer-list-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.golfer-expand-chevron {
+  font-size: 10px;
+  color: var(--text-muted);
+  min-width: 10px;
+}
 
 .golfer-name {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--text-secondary);
-  margin-bottom: 6px;
   line-height: 1.3;
 }
 
+.golfer-position {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: 'DM Mono', monospace;
+}
+
+.golfer-score {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px;
+  letter-spacing: 1px;
+  line-height: 1;
+  color: var(--text-primary);
+}
+
+.golfer-score.score-under { color: var(--green); }
+.golfer-score.score-even  { color: var(--text-primary); }
+.golfer-score.score-over  { color: var(--red); }
+
+.round-chip {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 2px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+}
+
+.round-chip.score-under { color: var(--green); border-color: var(--green-dim); background: var(--green-deep); }
+.round-chip.score-even  { color: var(--text-primary);  border-color: var(--text-muted); background: var(--bg-surface);}
+.round-chip.score-over  { color: var(--red);   border-color: var(--red-dim);   background: var(--red-deep); }
+
+/* ---- cut badge (kept) ---- */
 .cut-badge {
   display: inline-block;
   font-size: 9px;
@@ -411,147 +474,201 @@ html, body {
 
 .wd-badge { background: var(--amber-dim); color: var(--amber); }
 
-.golfer-score {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 26px;
-  letter-spacing: 1px;
-  line-height: 1;
-  color: var(--text-primary);
-  margin-bottom: 4px;
-}
-
-.golfer-score.score-under { color: var(--green); }
-.golfer-score.score-even  { color: var(--text-primary); }
-.golfer-score.score-over  { color: var(--red); }
-
-.golfer-position {
-  font-size: 11px;
-  color: var(--text-muted);
-  font-family: 'DM Mono', monospace;
-  margin-bottom: 6px;
-}
-
 .golfer-rounds {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 4px;
 }
 
-.round-chip {
-  font-family: 'DM Mono', monospace;
-  font-size: 10px;
-  padding: 2px 6px;
-  border-radius: 2px;
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
+/* ---- Hole Breakdown wrapper ---- */
+.hole-breakdown {
+  background: var(--bg-detail);
+  border-top: 1px solid var(--border-soft);
+  padding: 14px 14px 16px;
 }
 
-.round-chip.score-under { color: var(--green); border-color: var(--green-dim); background: var(--green-deep); }
-.round-chip.score-even  { color: var(--text-primary);  border-color: var(--text-muted); background: var(--bg-surface);}
-.round-chip.score-over  { color: var(--red);   border-color: var(--red-dim);   background: var(--red-deep); }
-
-/* ---- Hole-by-Hole Breakdown ---- */
-.hole-breakdown {
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 14px 16px;
-  margin-bottom: 20px;
+.hole-breakdown-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .hole-breakdown-title {
   font-size: 12px;
   font-weight: 500;
   color: var(--text-secondary);
-  margin-bottom: 12px;
   letter-spacing: 0.04em;
 }
 
-.round-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 10px;
+/* BB highlight toggle button */
+.bb-toggle-btn {
+  padding: 4px 10px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-muted);
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-transform: uppercase;
 }
 
-.round-row:last-child { margin-bottom: 0; }
+.bb-toggle-btn:hover  { border-color: var(--accent); color: var(--accent); }
+.bb-toggle-btn.active { background: var(--green-deep); border-color: var(--accent); color: var(--accent); }
 
-.round-label {
+/* ---- Scorecard ---- */
+.scorecard-round {
+  margin-bottom: 14px;
+}
+
+.scorecard-round:last-child { margin-bottom: 0; }
+
+.scorecard-round-label {
   font-family: 'DM Mono', monospace;
   font-size: 11px;
   color: var(--text-muted);
-  min-width: 52px;
+  margin-bottom: 6px;
   display: flex;
   gap: 6px;
   align-items: center;
 }
 
-/* ---- Hole Boxes ---- */
-.holes-strip {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 3px;
+.scorecard-scroll-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  display: block;
+  width: 100%;
+  max-width: 100%;
 }
 
-.hole-box {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 30px;
+.scorecard-table {
+  border-collapse: collapse;
+  min-width: 560px;
+  width: max-content;
+}
+
+.scorecard-table th,
+.scorecard-table td {
+  text-align: center;
+  padding: 0;
+  min-width: 28px;
+}
+
+.sc-label-cell {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  padding: 4px 6px 4px 2px;
+  text-align: left;
+  white-space: nowrap;
+  min-width: 44px;
+}
+
+.sc-hole-header {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  color: var(--text-muted);
   padding: 3px 2px;
-  border-radius: 3px;
-  border: 1px solid var(--border);
-  background: var(--bg-card);
+  background: var(--bg-row);
+  border-bottom: 1px solid var(--border-soft);
 }
 
-.hole-num {
+.sc-section-total {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: var(--bg-row);
+  border-left: 1px solid var(--border);
+  padding: 3px 4px;
+  white-space: nowrap;
+}
+
+.sc-par-cell {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--text-muted);
+  padding: 3px 2px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.sc-score-cell {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 15px;
+  padding: 4px 2px;
+  position: relative;
+  vertical-align: middle;
+}
+
+.sc-stroke {
+  display: block;
+  line-height: 1;
+}
+
+.sc-empty { color: var(--text-muted); font-size: 11px; }
+
+/* Hole color coding on scorecard cells */
+.sc-score-cell.hole-eagle  { background: var(--purple-deep); color: var(--purple); }
+.sc-score-cell.hole-birdie { background: var(--green-deep);  color: var(--green);  }
+.sc-score-cell.hole-par    { background: var(--bg-card);     color: var(--text-primary); }
+.sc-score-cell.hole-bogey  { background: var(--amber-deep);  color: var(--amber);  }
+.sc-score-cell.hole-double { background: var(--red-deep);    color: var(--red);    }
+
+/* BB highlight on individual player scorecard */
+.sc-bb-hole {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  z-index: 1;
+}
+
+/* Section totals as score cells */
+.sc-section-total.sc-score-cell {
+  vertical-align: middle;
+}
+
+.sc-total-strokes {
+  display: block;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 15px;
+  line-height: 1;
+}
+
+.sc-total-topar {
+  display: block;
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  line-height: 1.2;
+  margin-top: 1px;
+}
+
+/* Initials row in BB breakdown */
+.sc-initials-row td { padding: 2px 2px; }
+
+.sc-initials-cell {
   font-family: 'DM Mono', monospace;
   font-size: 8px;
   color: var(--text-muted);
-  line-height: 1;
-}
-
-.hole-score {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 14px;
-  line-height: 1.2;
-}
-
-.hole-par {
-  font-family: 'DM Mono', monospace;
-  font-size: 7px;
-  color: var(--text-muted);
-  line-height: 1;
-}
-
-.hole-contributor {
-  font-family: 'DM Mono', monospace;
-  font-size: 7px;
-  line-height: 1;
-  margin-top: 1px;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  letter-spacing: 0.02em;
+  vertical-align: middle;
   white-space: nowrap;
-  max-width: 28px;
 }
 
-.hole-empty .hole-score { color: var(--text-muted); font-size: 11px; }
-
-/* Hole colour coding */
-.hole-eagle  { background: var(--purple-deep); border-color: var(--purple-dim); }
-.hole-eagle  .hole-score { color: var(--purple); }
-
-.hole-birdie { background: var(--green-deep);  border-color: var(--green-dim); }
-.hole-birdie .hole-score { color: var(--green); }
-
-.hole-par    { background: var(--bg-card); border-color: var(--border); }
-.hole-par    .hole-score { color: var(--text-primary); }
-
-.hole-bogey  { background: var(--amber-deep); border-color: var(--amber-dim); }
-.hole-bogey  .hole-score { color: var(--amber); }
-
-.hole-double { background: var(--red-deep);  border-color: var(--red-dim); }
-.hole-double .hole-score { color: var(--red); }
+.sc-initials-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 2px 6px 2px 2px;
+  text-align: left;
+}
 
 /* ---- Best Ball Breakdown ---- */
 .bb-breakdown { margin-top: 4px; }
@@ -575,17 +692,6 @@ html, body {
   gap: 8px;
   align-items: center;
 }
-
-/* BB hole — highlighted border to show it's the best score used */
-.bb-hole {
-  border-width: 1px;
-  position: relative;
-}
-
-/* Tie indicator */
-.bb-tie { outline: 1px solid var(--gold); outline-offset: 1px; }
-
-.bb-hole .hole-contributor { color: var(--text-secondary); }
 
 /* ---- Footer ---- */
 .site-footer {
@@ -620,13 +726,11 @@ html, body {
   .header-brand { gap: 0px }
   .header-actions { gap: 8px }
   .brand-abbr { font-size: 24px; }
+
   .leaderboard-wrap { padding: 0 12px; margin-top: 16px; }
-  .leaderboard-table th, .leaderboard-table td { padding: 10px 10px; }
+
   .score-primary { font-size: 20px; }
-  .detail-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
   .banner-inner { padding: 12px 14px; gap: 12px; }
   .tourney-tab { font-size: 11px; padding: 5px 10px; }
-  .holes-strip { gap: 2px; }
-  .hole-box { width: 26px; }
-  .hole-score { font-size: 12px; }
+  .scorecard-table { min-width: 480px; }
 }
