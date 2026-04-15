@@ -42,7 +42,7 @@ const TOURNAMENTS = {
     shortName: "PGA Champ",
     espnEventId: "401811947",
     location: "Aronimink Golf Club, Newtown Square, PA",
-    startDate: "20260514",
+    startDate: "20260414", // modified just for testing
     endDate:   "20260517",
   },
   us_open: {

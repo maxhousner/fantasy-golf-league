@@ -238,7 +238,7 @@ html, body {
 }
 
 .leaderboard-table th {
-  padding: 10px 16px;
+  padding: 10px 8px;
   font-family: 'DM Mono', monospace;
   font-size: 10px;
   font-weight: 500;
@@ -251,7 +251,7 @@ html, body {
 }
 
 .leaderboard-table .th-rank   { width: 44px; text-align: center; }
-.leaderboard-table .th-name   { /* flexible */ }
+/* .leaderboard-table .th-name   { flexible } */
 .leaderboard-table .th-score  { width: 88px; text-align: center; }
 .leaderboard-table .th-expand { width: 28px; }
 
