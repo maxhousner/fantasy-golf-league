@@ -613,9 +613,9 @@ html, body {
   .brand-full, .brand-season { display: none; }
 }
 @media (max-width: 640px) {
-  .header-inner { padding: 0; }
-  .header-brand { padding: 0 0 0 14px; }
-  .header-actions { padding: 0 14px 0 0; }
+  .brand-abbr { font-size: 24px; }
+  .header-brand { gap: 0px }
+  .header-inner { padding: 0 10px }
   .leaderboard-wrap { padding: 0 12px; margin-top: 16px; }
   .leaderboard-table th, .leaderboard-table td { padding: 10px 10px; }
   .score-primary { font-size: 20px; }
