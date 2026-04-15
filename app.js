@@ -718,7 +718,7 @@ function renderBestBallBreakdown(result) {
 
     html += `<div class="bb-round-block">`;
     html += `<div class="bb-round-header">
-      Round ${round.roundNum}
+      Round ${round.roundNum}:
       <span class="${scoreColorClass(round.toPar)}">${round.toParDisplay}</span>
     </div>`;
 

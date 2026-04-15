@@ -518,8 +518,8 @@ html, body {
   text-transform: uppercase;
 }
 
-.bb-toggle-btn:hover  { border-color: var(--accent); color: var(--accent); }
-.bb-toggle-btn.active { background: var(--green-deep); border-color: var(--accent); color: var(--accent); }
+.bb-toggle-btn:hover  { border-color: var(--green-dim); color: var(--green); }
+.bb-toggle-btn.active { background: var(--green-deep); border-color: var(--green-dim); color: var(--green); }
 
 /* ---- Scorecard ---- */
 .scorecard-round {
@@ -573,7 +573,7 @@ html, body {
 
 .sc-hole-header {
   font-family: 'DM Mono', monospace;
-  font-size: 9px;
+  font-size: 10px;
   color: var(--text-muted);
   padding: 3px 2px;
   background: var(--bg-row);
@@ -587,6 +587,7 @@ html, body {
   color: var(--text-secondary);
   background: var(--bg-row);
   border-left: 1px solid var(--border);
+  border-right: 1px solid var(--border);
   padding: 3px 4px;
   white-space: nowrap;
 }
@@ -623,7 +624,7 @@ html, body {
 
 /* BB highlight on individual player scorecard */
 .sc-bb-hole {
-  outline: 2px solid var(--accent);
+  outline: 1px solid var(--green-dim);
   outline-offset: -2px;
   z-index: 1;
 }
