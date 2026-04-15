@@ -394,8 +394,8 @@ html, body {
 
 .detail-panel {
   padding: 14px 14px 20px;
-  border-top: 1px solid var(--border-soft);
-  border-bottom: 1px solid var(--border-soft);
+  /* border-top: 1px solid var(--border-soft); */
+  /* border-bottom: 1px solid var(--border-soft); */
   /* Constrain width to the cell, never wider than the viewport */
   width: 100%;
   max-width: 100%;
@@ -801,7 +801,7 @@ html, body {
    RESPONSIVE
 ============================================================ */
 
-@media (max-width: 710px) {
+@media (max-width: 720px) {
   .brand-full, .brand-season { display: none; }
 }
 
@@ -810,7 +810,7 @@ html, body {
   .header-brand   { gap: 0; }
   .header-actions { gap: 8px; }
   .brand-abbr     { font-size: 22px; }
-  .last-updated   { display: none; } /* saves space on small screens */
+  /* .last-updated   { display: none; } saves space on small screens */
 
   .leaderboard-wrap { padding: 0 10px; margin-top: 14px; }
 
@@ -819,7 +819,7 @@ html, body {
   .leaderboard-table .th-score { width: 72px; }
   .leaderboard-table .th-expand { width: 22px; }
 
-  .leaderboard-table td { padding: 10px 8px; }
+  /* .leaderboard-table td { padding: 10px 8px; } */
   .rank-cell  { font-size: 18px; }
   .score-primary { font-size: 18px; }
   .score-label   { display: none; } /* too cramped on small screens */
