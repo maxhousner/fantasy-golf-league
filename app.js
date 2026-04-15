@@ -270,8 +270,7 @@ function calcBestBall(golferNames) {
   let bbTotalToPar = 0;
 
   for (let r = 1; r <= maxRound; r++) {
-    // For each hole 1–18, find the best (lowest) stroke count
-    // and which player(s) achieved it
+    // For each hole 1–18, find the best (lowest) stroke count and which player(s) achieved it
     const holeResults = [];
 
     for (let hole = 1; hole <= 18; hole++) {
@@ -410,15 +409,14 @@ function render() {
 
 function renderHeader() {
   const tournament = TOURNAMENTS[ACTIVE_TOURNAMENT];
-  document.getElementById("tournament-name").textContent = tournament?.name ?? "SPGA";
+  document.getElementById("tournament-name").textContent = tournament?.name ?? "-";
 
-  let meta = tournament?.location ?? "";
+  document.getElementById("tournament-loc").textContent = tournament?.location ?? "";
   if (tournament) {
     const start = formatDateDisplay(tournament.startDate);
     const end   = formatDateDisplay(tournament.endDate);
-    meta += ` · ${start} – ${end}`;
+    document.getElementById("tournament-dates").textContent = `${start} – ${end}`;
   }
-  document.getElementById("tournament-meta").textContent = meta;
 
   const updatedEl = document.getElementById("last-updated");
   if (state.lastUpdated) {
@@ -451,7 +449,7 @@ function renderLeaderboard() {
   if (state.tournamentState === "pre") {
     const tournament = TOURNAMENTS[ACTIVE_TOURNAMENT];
     html += `<tr><td colspan="5" class="info-cell">
-      ⛳ Tournament starts ${formatDateDisplay(tournament.startDate)} — rosters below
+      Tournament Starts: ${formatDateDisplay(tournament.startDate)} | Player Draft: ${formatDateDisplay(tournament.startDate - 7)}
     </td></tr>`;
   }
 

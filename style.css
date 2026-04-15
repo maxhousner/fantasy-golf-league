@@ -163,10 +163,16 @@ html, body {
   line-height: 1;
 }
 
-.tournament-meta {
+.tournament-loc {
   font-size: 12px;
   color: var(--text-muted);
   margin-top: 3px;
+  letter-spacing: 0.02em;
+}
+
+.tournament-dates {
+  font-size: 12px;
+  color: var(--text-muted);
   letter-spacing: 0.02em;
 }
 
@@ -192,7 +198,7 @@ html, body {
 /* ---- Leaderboard ---- */
 .leaderboard-wrap {
   max-width: 1040px;
-  margin: 24px auto 40px;
+  margin: 24px auto 16px;
   padding: 0 20px;
 }
 
@@ -221,9 +227,9 @@ html, body {
   white-space: nowrap;
 }
 
-.th-rank   { width: 48px; text-align: center; }
-.th-score  { width: 120px; text-align: center; }
-.th-expand { width: 32px; }
+.leaderboard-table .th-rank   { width: 48px; text-align: center; }
+.leaderboard-table .th-score  { width: 120px; text-align: center; }
+.leaderboard-table .th-expand { width: 32px; }
 
 /* Sortable headers */
 .th-sortable {
@@ -584,17 +590,32 @@ html, body {
   margin: 0 auto;
   padding: 20px;
   display: flex;
-  gap: 10px;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0px;
   font-size: 11px;
   color: var(--text-muted);
   letter-spacing: 0.04em;
   font-family: 'DM Mono', monospace;
 }
 
+.site-footer-top {
+  font-weight: 100;
+}
+
+.site-footer-bottom {
+  font-weight: 100;
+}
+
 /* ---- Responsive ---- */
-@media (max-width: 640px) {
+@media (max-width: 710px) {
   .brand-full, .brand-season { display: none; }
-  .header-inner { padding: 0 14px; }
+}
+@media (max-width: 640px) {
+  .header-inner { padding: 0; }
+  .header-brand { padding: 0 0 0 14px; }
+  .header-actions { padding: 0 14px 0 0; }
   .leaderboard-wrap { padding: 0 12px; margin-top: 16px; }
   .leaderboard-table th, .leaderboard-table td { padding: 10px 10px; }
   .score-primary { font-size: 20px; }

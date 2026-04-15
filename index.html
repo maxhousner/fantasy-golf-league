@@ -24,13 +24,13 @@
       <div class="header-actions">
         <span id="loading-indicator" class="loading-dot" style="display:none">●</span>
         <span id="last-updated" class="last-updated"></span>
-        <button id="refresh-btn" class="refresh-btn" title="Refresh scores">
+        <button id="refresh-btn" class="refresh-btn" title="Refresh scores" textContent="Refresh">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M13 2v4h-4"/>
             <path d="M1 12v-4h4"/>
             <path d="M11.5 5A5 5 0 1 0 12 9"/>
           </svg>
-          Refresh
+          
         </button>
       </div>
     </div>
@@ -40,8 +40,9 @@
   <section class="tournament-banner">
     <div class="banner-inner">
       <div class="banner-info">
-        <h1 id="tournament-name" class="tournament-name">—</h1>
-        <p id="tournament-meta" class="tournament-meta"></p>
+        <h1 id="tournament-name" class="tournament-name"></h1>
+        <p id="tournament-loc" class="tournament-loc"></p>
+        <p id="tournament-dates" class="tournament-dates"></p>
       </div>
       <div class="banner-nav">
         <button class="tourney-tab" onclick="switchTournament('the_masters')">The Masters</button>
@@ -60,10 +61,10 @@
           <th class="th-rank">POS</th>
           <th class="th-name">MANAGER</th>
           <th class="th-score th-sortable sort-active" data-sort="combined" onclick="setSortBy('combined')">
-            COMBINED <span class="sort-arrow">▼</span>
+            COMBINED<span class="sort-arrow">▼</span>
           </th>
           <th class="th-score th-sortable" data-sort="bestball" onclick="setSortBy('bestball')">
-            BEST BALL <span class="sort-arrow">▼</span>
+            BEST BALL<span class="sort-arrow">▼</span>
           </th>
           <th class="th-expand"></th>
         </tr>
@@ -78,7 +79,8 @@
 
   <!-- ========== FOOTER ========== -->
   <footer class="site-footer">
-    <span>Created by Max Housner · 2026 · Live scores via ESPN</span>
+    <div class="site-footer-top">Live scores via ESPN API</div>
+    <div class="site-footer-bottom">Created by Max Housner · 2026</div>
   </footer>
 
   <script src="data.js"></script>
