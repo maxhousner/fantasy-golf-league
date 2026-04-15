@@ -18,11 +18,11 @@
         <span class="brand-abbr">SPGA Fantasy</span>
         <div class="brand-text">
           <span class="brand-full">Sub-Par Golf Association Fantasy Golf League</span>
-          <span class="brand-season">2026 Season · Majors League</span>
+          <span class="brand-season">2026 Season · League Dashboard</span>
         </div>
       </div>
       <div class="header-actions">
-        <span id="loading-indicator" class="loading-dot" style="display:none">●</span>
+        <span id="loading-indicator" class="loading-dot">●</span>
         <span id="last-updated" class="last-updated"></span>
         <button id="refresh-btn" class="refresh-btn" title="Refresh scores">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -79,8 +79,8 @@
 
   <!-- ========== FOOTER ========== -->
   <footer class="site-footer">
-    <div class="site-footer-top">Live scores via ESPN API</div>
-    <div class="site-footer-bottom">Created by Max Housner · 2026</div>
+    <div>Live scores via ESPN API</div>
+    <div>Created by Max Housner · 2026</div>
   </footer>
 
   <script src="data.js"></script>
@@ -94,8 +94,9 @@
         btn.classList.toggle('active', keys[i] === key);
       });
       if (window.state) {
-        window.state.expandedManager = null;
+        window.state.expandedManagers.clear();
         window.state.expandedGolfers.clear();
+        window.state.expandedBB.clear();
         window.state.bbHighlight.clear();
       }
       fetchScores();
@@ -106,11 +107,6 @@
         const keys = ['the_masters', 'pga_championship', 'us_open', 'the_open'];
         btn.classList.toggle('active', keys[i] === ACTIVE_TOURNAMENT);
       });
-    });
-
-    // Prevent refresh button hover state sticking on mobile
-    document.getElementById('refresh-btn').addEventListener('touchend', function() {
-      this.blur();
     });
   </script>
 

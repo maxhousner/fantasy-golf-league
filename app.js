@@ -3,24 +3,25 @@
 //  app.js  |  ESPN API + Scoring Engine + UI Controller
 // ============================================================
 
-const ESPN_BASE   = "https://site.api.espn.com/apis/site/v2/sports/golf/pga/scoreboard";
-const CORS_PROXY  = "https://corsproxy.io/?url=";
-const REFRESH_MS  = 120000; // 2 minutes
+const ESPN_BASE  = "https://site.api.espn.com/apis/site/v2/sports/golf/pga/scoreboard";
+const CORS_PROXY = "https://corsproxy.io/?url=";
+const REFRESH_MS = 120000; // 2 minutes
 
 // ============================================================
 //  STATE
 // ============================================================
 
 const state = {
-  playerScores:     {},   // { "Player Name": parsedPlayerObject }
-  leaderboard:      [],   // computed manager results
+  playerScores:     {},    // { "Player Name": parsedPlayerObject }
+  leaderboard:      [],    // computed manager results
   lastUpdated:      null,
   loading:          false,
   error:            null,
-  tournamentState:  null, // "pre" | "live" | "post"
-  expandedManager:  null,
+  tournamentState:  null,  // "pre" | "live" | "post"
+  expandedManagers: new Set(), // Set of managerId strings
   expandedGolfers:  new Set(), // Set of "managerId|golferName" strings
-  bbHighlight:      new Set(), // Set of "managerId|golferName" strings where BB highlight is on
+  expandedBB:       new Set(), // Set of managerId strings with BB panel open
+  bbHighlight:      new Set(), // Set of "managerId|golferName" strings
   sortBy:           "combined", // "combined" | "bestball"
 };
 
@@ -28,13 +29,9 @@ const state = {
 //  DATE HELPERS
 // ============================================================
 
-// Parse YYYYMMDD string into a local midnight Date
 function parseDate(yyyymmdd) {
   const s = String(yyyymmdd);
-  const y = parseInt(s.slice(0, 4));
-  const m = parseInt(s.slice(4, 6)) - 1;
-  const d = parseInt(s.slice(6, 8));
-  return new Date(y, m, d);
+  return new Date(parseInt(s.slice(0,4)), parseInt(s.slice(4,6)) - 1, parseInt(s.slice(6,8)));
 }
 
 function todayMidnight() {
@@ -43,8 +40,7 @@ function todayMidnight() {
 }
 
 function formatDateDisplay(yyyymmdd) {
-  const d = parseDate(yyyymmdd);
-  return d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+  return parseDate(yyyymmdd).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
 }
 
 // ============================================================
@@ -61,10 +57,7 @@ function getTournamentState(tournament) {
 }
 
 function buildUrl(tournament, tState) {
-  if (tState === "post") {
-    return `${ESPN_BASE}?dates=${tournament.endDate}`;
-  }
-  return ESPN_BASE;
+  return tState === "post" ? `${ESPN_BASE}?dates=${tournament.endDate}` : ESPN_BASE;
 }
 
 // ============================================================
@@ -78,7 +71,6 @@ async function fetchScores() {
   const tState = getTournamentState(tournament);
   state.tournamentState = tState;
 
-  // Pre-tournament: no fetch needed
   if (tState === "pre") {
     state.playerScores = {};
     state.leaderboard  = computeLeaderboard();
@@ -88,15 +80,11 @@ async function fetchScores() {
   }
 
   setLoading(true);
-
   const url = buildUrl(tournament, tState);
-
   let data;
   try {
     let res = await fetch(url).catch(() => null);
-    if (!res || !res.ok) {
-      res = await fetch(`${CORS_PROXY}${encodeURIComponent(url)}`);
-    }
+    if (!res || !res.ok) res = await fetch(`${CORS_PROXY}${encodeURIComponent(url)}`);
     if (!res.ok) throw new Error(`ESPN returned ${res.status}`);
     data = await res.json();
   } catch (err) {
@@ -108,7 +96,6 @@ async function fetchScores() {
   state.leaderboard  = computeLeaderboard();
   state.lastUpdated  = new Date();
   state.error        = null;
-
   setLoading(false);
   render();
 }
@@ -119,33 +106,19 @@ async function fetchScores() {
 
 function parseESPN(data) {
   const scores = {};
-
   const competitors = data?.events?.[0]?.competitions?.[0]?.competitors ?? [];
-
   for (const comp of competitors) {
-    const name     = comp.athlete?.displayName;
+    const name = comp.athlete?.displayName;
     if (!name) continue;
-
-    const position  = comp.order ? `${comp.order}` : "--";
-    const missedCut = inferMissedCut(comp);
-
-    // Overall to-par from top-level score field (e.g. "E", "-5", "+2")
-    const overallToParStr = comp.score ?? "E";
-    const overallToPar    = parseToParValue(overallToParStr);
-
-    // Parse rounds
-    const rounds = parseRounds(comp.linescores ?? []);
-
     scores[name] = {
       name,
-      position,
-      missedCut,
-      overallToPar,
+      position:            comp.order ? `${comp.order}` : "--",
+      missedCut:           inferMissedCut(comp),
+      overallToPar:        parseToParValue(comp.score ?? "E"),
       overallToParDisplay: comp.score ?? "E",
-      rounds,  // array of round objects (see parseRounds)
+      rounds:              parseRounds(comp.linescores ?? []),
     };
   }
-
   return scores;
 }
 
@@ -153,59 +126,26 @@ function parseESPN(data) {
 //  PARSE ROUNDS & HOLES
 // ============================================================
 
-// Returns array of round objects, one per round played:
-// {
-//   roundNum:      1,
-//   totalStrokes:  69,
-//   toParDisplay:  "-3",
-//   toPar:         -3,
-//   holes: [
-//     { hole: 1, strokes: 4, par: 4, toPar: 0, toParDisplay: "E" },
-//     ...
-//   ]
-// }
-
 function parseRounds(linescores) {
   const rounds = [];
-
   for (const ls of linescores) {
-    const roundNum      = ls.period;
-    const totalStrokes  = ls.value;
-    const toParDisplay  = ls.displayValue;
-
-    // Skip rounds with no data (e.g. future rounds with value 0 and displayValue "-")
     if (!ls.linescores || ls.linescores.length === 0) continue;
-    if (toParDisplay === "-" && totalStrokes === 0) continue;
-
-    const toPar = parseToParValue(toParDisplay);
-
-    // Parse hole-by-hole, sort by hole number
-    const holes = ls.linescores
-      .map(h => {
-        const strokes       = Math.round(h.value);
-        const scoreTypeDisp = h.scoreType?.displayValue ?? "E";
-        const toParHole     = parseToParValue(scoreTypeDisp);
-        const par           = strokes - toParHole;
-        return {
-          hole:          h.period,
-          strokes,
-          par,
-          toPar:         toParHole,
-          toParDisplay:  scoreTypeDisp,
-        };
-      })
-      .sort((a, b) => a.hole - b.hole);
-
+    if (ls.displayValue === "-" && ls.value === 0) continue;
     rounds.push({
-      roundNum,
-      totalStrokes: Math.round(totalStrokes),
-      toParDisplay,
-      toPar,
-      holes,
+      roundNum:     ls.period,
+      totalStrokes: Math.round(ls.value),
+      toParDisplay: ls.displayValue,
+      toPar:        parseToParValue(ls.displayValue),
+      holes: ls.linescores
+        .map(h => {
+          const strokes   = Math.round(h.value);
+          const scoreDisp = h.scoreType?.displayValue ?? "E";
+          const toParHole = parseToParValue(scoreDisp);
+          return { hole: h.period, strokes, par: strokes - toParHole, toPar: toParHole };
+        })
+        .sort((a, b) => a.hole - b.hole),
     });
   }
-
-  // Sort rounds by round number
   rounds.sort((a, b) => a.roundNum - b.roundNum);
   return rounds;
 }
@@ -219,82 +159,48 @@ function parseToParValue(str) {
 }
 
 function inferMissedCut(comp) {
-  const linescores = comp.linescores ?? [];
-  const roundsWithHoles = linescores.filter(ls =>
-    ls.linescores && ls.linescores.length > 0 &&
-    !(ls.displayValue === "-" && ls.value === 0)
-  );
-  return roundsWithHoles.length === 2 &&
-    linescores.length >= 3 &&
-    (linescores[2]?.linescores?.length ?? 0) === 0;
+  const ls = comp.linescores ?? [];
+  const withHoles = ls.filter(r => r.linescores?.length > 0 && !(r.displayValue === "-" && r.value === 0));
+  return withHoles.length === 2 && ls.length >= 3 && (ls[2]?.linescores?.length ?? 0) === 0;
 }
 
 // ============================================================
 //  SCORING ENGINE
 // ============================================================
 
-// --- Combined Score ---
-// Uses ESPN's top-level to-par for each rostered player, summed.
-
 function calcCombined(golferNames) {
-  let total    = 0;
-  let hasScore = false;
-
+  let total = 0, hasScore = false;
   for (const name of golferNames) {
     const g = state.playerScores[name];
     if (!g) continue;
-    total   += g.overallToPar;
+    total += g.overallToPar;
     hasScore = true;
   }
-
-  return {
-    total:        hasScore ? total : null,
-    totalDisplay: hasScore ? formatToPar(total) : "--",
-  };
+  return { total: hasScore ? total : null, totalDisplay: hasScore ? formatToPar(total) : "--" };
 }
 
-// --- Best Ball ---
-// For each round, for each hole, pick the lowest stroke count
-// among all rostered players. Sum those best-hole strokes per
-// round to get BB round score (expressed as to-par). Sum all
-// BB round scores for BB total.
-
 function calcBestBall(golferNames) {
-  // Gather all rostered players that have score data
-  const players = golferNames
-    .map(name => state.playerScores[name])
-    .filter(Boolean);
+  const players = golferNames.map(n => state.playerScores[n]).filter(Boolean);
+  if (!players.length) return { total: null, totalDisplay: "--", rounds: [] };
 
-  if (players.length === 0) {
-    return { total: null, totalDisplay: "--", rounds: [] };
-  }
-
-  // Find how many rounds have been played across all players
   const maxRound = Math.max(...players.map(p => p.rounds.length), 0);
-  if (maxRound === 0) {
-    return { total: null, totalDisplay: "--", rounds: [] };
-  }
+  if (!maxRound) return { total: null, totalDisplay: "--", rounds: [] };
 
   const bbRounds = [];
   let bbTotalToPar = 0;
 
   for (let r = 1; r <= maxRound; r++) {
-    // For each hole 1–18, find the best (lowest) stroke count and which player(s) achieved it
     const holeResults = [];
+    let bbRoundStrokes = 0;
 
     for (let hole = 1; hole <= 18; hole++) {
-      let bestStrokes = Infinity;
-      let par         = null;
-      let bestPlayers = [];
-
+      let bestStrokes = Infinity, par = null, bestPlayers = [];
       for (const player of players) {
         const round = player.rounds.find(rd => rd.roundNum === r);
         if (!round) continue;
         const holeData = round.holes.find(h => h.hole === hole);
         if (!holeData) continue;
-
         if (par === null) par = holeData.par;
-
         if (holeData.strokes < bestStrokes) {
           bestStrokes = holeData.strokes;
           bestPlayers = [player.name];
@@ -302,48 +208,31 @@ function calcBestBall(golferNames) {
           bestPlayers.push(player.name);
         }
       }
-
-      if (bestStrokes === Infinity) continue; // hole not yet played
-
-      holeResults.push({
-        hole,
-        bestStrokes,
-        par,
-        toPar:         par !== null ? bestStrokes - par : 0,
-        toParDisplay:  par !== null ? formatToPar(bestStrokes - par) : "--",
-        bestPlayers,   // which player(s) score is used
-      });
+      if (bestStrokes === Infinity) continue;
+      bbRoundStrokes += bestStrokes;
+      holeResults.push({ hole, bestStrokes, par, toPar: par !== null ? bestStrokes - par : 0, bestPlayers });
     }
 
-    if (holeResults.length === 0) continue;
+    if (!holeResults.length) continue;
 
-    // BB round to-par = sum of (bestStrokes - par) for all holes played
-    const roundToPar = holeResults.reduce((sum, h) => {
-      return h.par !== null ? sum + (h.bestStrokes - h.par) : sum;
-    }, 0);
-
+    const roundToPar = holeResults.reduce((s, h) => h.par !== null ? s + (h.bestStrokes - h.par) : s, 0);
     bbTotalToPar += roundToPar;
-
     bbRounds.push({
-      roundNum:    r,
-      toPar:       roundToPar,
+      roundNum:     r,
+      totalStrokes: bbRoundStrokes,
+      toPar:        roundToPar,
       toParDisplay: formatToPar(roundToPar),
-      holes:       holeResults,
+      holes:        holeResults,
     });
   }
 
-  return {
-    total:        bbTotalToPar,
-    totalDisplay: formatToPar(bbTotalToPar),
-    rounds:       bbRounds,
-  };
+  return { total: bbTotalToPar, totalDisplay: formatToPar(bbTotalToPar), rounds: bbRounds };
 }
 
 function formatToPar(val) {
   if (val === null || val === undefined) return "--";
   if (val === 0) return "E";
-  if (val < 0)  return `${val}`;
-  return `+${val}`;
+  return val < 0 ? `${val}` : `+${val}`;
 }
 
 // ============================================================
@@ -351,16 +240,10 @@ function formatToPar(val) {
 // ============================================================
 
 function computeLeaderboard() {
-  const results = [];
-
-  for (const manager of MANAGERS) {
+  const results = MANAGERS.map(manager => {
     const golferNames = manager.golfers[ACTIVE_TOURNAMENT] ?? [];
-    const combined    = calcCombined(golferNames);
-    const bestBall    = calcBestBall(golferNames);
-
-    results.push({ manager, golferNames, combined, bestBall });
-  }
-
+    return { manager, golferNames, combined: calcCombined(golferNames), bestBall: calcBestBall(golferNames) };
+  });
   sortLeaderboard(results);
   assignRanks(results);
   return results;
@@ -368,27 +251,16 @@ function computeLeaderboard() {
 
 function sortLeaderboard(results) {
   results.sort((a, b) => {
-    const aHas = a.golferNames.length > 0;
-    const bHas = b.golferNames.length > 0;
-    if (!aHas && bHas)  return 1;
-    if (aHas  && !bHas) return -1;
+    const aHas = a.golferNames.length > 0, bHas = b.golferNames.length > 0;
+    if (!aHas && bHas) return 1;
+    if (aHas && !bHas) return -1;
     if (!aHas && !bHas) return 0;
-
     if (state.sortBy === "bestball") {
-      const aBB = a.bestBall.total ?? 999;
-      const bBB = b.bestBall.total ?? 999;
-      if (aBB !== bBB) return aBB - bBB;
-      const aC = a.combined.total ?? 999;
-      const bC = b.combined.total ?? 999;
-      return aC - bC;
-    } else {
-      const aC = a.combined.total ?? 999;
-      const bC = b.combined.total ?? 999;
-      if (aC !== bC) return aC - bC;
-      const aBB = a.bestBall.total ?? 999;
-      const bBB = b.bestBall.total ?? 999;
-      return aBB - bBB;
+      const d = (a.bestBall.total ?? 999) - (b.bestBall.total ?? 999);
+      return d !== 0 ? d : (a.combined.total ?? 999) - (b.combined.total ?? 999);
     }
+    const d = (a.combined.total ?? 999) - (b.combined.total ?? 999);
+    return d !== 0 ? d : (a.bestBall.total ?? 999) - (b.bestBall.total ?? 999);
   });
 }
 
@@ -397,11 +269,8 @@ function assignRanks(results) {
   for (let i = 0; i < results.length; i++) {
     if (!results[i].golferNames.length) { results[i].rank = "--"; continue; }
     if (i > 0 && results[i].golferNames.length) {
-      const prev = results[i - 1];
-      const curr = results[i];
-      const sameC  = prev.combined.total  === curr.combined.total;
-      const sameBB = prev.bestBall.total  === curr.bestBall.total;
-      if (!(sameC && sameBB)) rank = i + 1;
+      const p = results[i-1], c = results[i];
+      if (!(p.combined.total === c.combined.total && p.bestBall.total === c.bestBall.total)) rank = i + 1;
     }
     results[i].rank = rank;
   }
@@ -417,19 +286,16 @@ function render() {
 }
 
 function renderHeader() {
-  const tournament = TOURNAMENTS[ACTIVE_TOURNAMENT];
-  document.getElementById("tournament-name").textContent = tournament?.name ?? "-";
-
-  document.getElementById("tournament-loc").textContent = tournament?.location ?? "";
-  if (tournament) {
-    const start = formatDateDisplay(tournament.startDate);
-    const end   = formatDateDisplay(tournament.endDate);
-    document.getElementById("tournament-dates").textContent = `${start} – ${end}`;
+  const t = TOURNAMENTS[ACTIVE_TOURNAMENT];
+  document.getElementById("tournament-name").textContent = t?.name ?? "-";
+  document.getElementById("tournament-loc").textContent  = t?.location ?? "";
+  if (t) {
+    document.getElementById("tournament-dates").textContent =
+      `${formatDateDisplay(t.startDate)} – ${formatDateDisplay(t.endDate)}`;
   }
-
-  const updatedEl = document.getElementById("last-updated");
   if (state.lastUpdated) {
-    updatedEl.textContent = `Updated ${state.lastUpdated.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+    document.getElementById("last-updated").textContent =
+      `Updated ${state.lastUpdated.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
   }
 }
 
@@ -437,7 +303,6 @@ function renderLeaderboard() {
   const container = document.getElementById("leaderboard-body");
   if (!container) return;
 
-  // Update sort header indicators
   document.querySelectorAll(".th-sortable").forEach(th => {
     th.classList.toggle("sort-active", th.dataset.sort === state.sortBy);
   });
@@ -446,7 +311,6 @@ function renderLeaderboard() {
     container.innerHTML = `<tr><td colspan="5" class="loading-cell">Fetching scores from ESPN…</td></tr>`;
     return;
   }
-
   if (state.error && !state.leaderboard.length) {
     container.innerHTML = `<tr><td colspan="5" class="error-cell">${state.error}</td></tr>`;
     return;
@@ -454,25 +318,19 @@ function renderLeaderboard() {
 
   let html = "";
 
-  // Pre-tournament banner
   if (state.tournamentState === "pre") {
-    const tournament = TOURNAMENTS[ACTIVE_TOURNAMENT];
-    html += `<tr><td colspan="5" class="info-cell">
-      Tournament Starts: ${formatDateDisplay(tournament.startDate)} | Player Draft: ${formatDateDisplay(tournament.startDate - 4)}
-    </td></tr>`;
+    const t = TOURNAMENTS[ACTIVE_TOURNAMENT];
+    html += `<tr><td colspan="5" class="info-cell">Tournament Starts: ${formatDateDisplay(t.startDate)}</td></tr>`;
   }
-
-  // Error banner row (non-blocking)
   if (state.error) {
     html += `<tr><td colspan="5" class="error-cell" style="padding:8px 20px;">${state.error}</td></tr>`;
   }
 
   for (const result of state.leaderboard) {
-    const isExpanded = state.expandedManager === result.manager.id;
+    const isExpanded = state.expandedManagers.has(result.manager.id);
     const hasRoster  = result.golferNames.length > 0;
     const hasScores  = result.combined.total !== null;
 
-    // ---- Manager row ----
     html += `
       <tr class="manager-row ${isExpanded ? "expanded" : ""} ${!hasRoster ? "no-roster" : ""}"
           onclick="${hasRoster ? `toggleManager('${result.manager.id}')` : ""}">
@@ -492,28 +350,26 @@ function renderLeaderboard() {
         <td class="expand-cell">${hasRoster ? (isExpanded ? "▲" : "▼") : ""}</td>
       </tr>`;
 
-    // ---- Expanded detail ----
     if (isExpanded && hasRoster) {
       html += `<tr class="detail-row"><td colspan="5"><div class="detail-panel">`;
-
-      // -- Player list --
       html += `<div class="detail-section-label">Roster</div>`;
       html += `<div class="golfer-list">`;
 
       for (const name of result.golferNames) {
-        const g       = state.playerScores[name];
-        const found   = !!g;
-        const gKey    = `${result.manager.id}|${name}`;
+        const g    = state.playerScores[name];
+        const gKey = `${result.manager.id}|${name}`;
         const isGolferExpanded = state.expandedGolfers.has(gKey);
-        const bbOn    = state.bbHighlight.has(gKey);
+        const bbOn = state.bbHighlight.has(gKey);
 
-        if (!found) {
+        if (!g) {
           const isPre = state.tournamentState === "pre";
           html += `
             <div class="golfer-list-item ${isPre ? "" : "not-found"}">
-              <div class="golfer-list-main">
-                <span class="golfer-name">${name}</span>
-                <span class="golfer-score">${isPre ? "--" : "Not in field"}</span>
+              <div class="golfer-list-main no-cursor">
+                <div class="golfer-list-left">
+                  <span class="golfer-name">${name}</span>
+                </div>
+                <span class="golfer-score">${isPre ? "--" : "N/A"}</span>
               </div>
             </div>`;
           continue;
@@ -525,30 +381,47 @@ function renderLeaderboard() {
             <div class="golfer-list-main"
                  onclick="toggleGolfer('${result.manager.id}', '${name.replace(/'/g, "\\'")}')">
               <div class="golfer-list-left">
-                <span class="golfer-name">${name} ${cutBadge}</span>
+                <span class="golfer-name">${name}${cutBadge}</span>
                 <span class="golfer-position">${g.position}</span>
               </div>
               <div class="golfer-list-right">
-                ${renderRoundSummary(g)}
+                ${renderRoundChips(g.rounds)}
                 <span class="golfer-score ${scoreColorClass(g.overallToPar)}">${g.overallToParDisplay}</span>
                 <span class="golfer-expand-chevron">${isGolferExpanded ? "▲" : "▼"}</span>
               </div>
             </div>`;
 
         if (isGolferExpanded) {
-          html += renderHoleByHole(g, result.manager.id, name, bbOn);
+          html += renderScorecard(g.rounds, {
+            type: "player", g, managerId: result.manager.id, golferName: name, bbHighlightOn: bbOn,
+          });
         }
 
         html += `</div>`; // golfer-list-item
       }
 
-      html += `</div>`; // golfer-list
-
-      // -- Best ball breakdown --
+      // Best ball expandable row — styled like a golfer row
       if (result.bestBall.rounds.length > 0) {
-        html += renderBestBallBreakdown(result);
+        const bbExpanded = state.expandedBB.has(result.manager.id);
+        html += `
+          <div class="golfer-list-item bb-row ${bbExpanded ? "expanded" : ""}">
+            <div class="golfer-list-main" onclick="toggleBBExpand('${result.manager.id}')">
+              <div class="golfer-list-left">
+                <span class="golfer-name bb-label">Best Ball</span>
+              </div>
+              <div class="golfer-list-right">
+                ${renderRoundChips(result.bestBall.rounds)}
+                <span class="golfer-score ${scoreColorClass(result.bestBall.total)}">${result.bestBall.totalDisplay}</span>
+                <span class="golfer-expand-chevron">${bbExpanded ? "▲" : "▼"}</span>
+              </div>
+            </div>`;
+        if (bbExpanded) {
+          html += renderScorecard(result.bestBall.rounds, { type: "bestball" });
+        }
+        html += `</div>`; // golfer-list-item
       }
 
+      html += `</div>`; // golfer-list
       html += `</div></td></tr>`; // detail-panel, td, tr
     }
   }
@@ -560,247 +433,141 @@ function renderLeaderboard() {
 //  DETAIL RENDER HELPERS
 // ============================================================
 
-function renderRoundSummary(g) {
-  if (!g.rounds.length) return "";
-  const chips = g.rounds.map(r =>
-    `<span class="round-chip ${scoreColorClass(r.toPar)}">R${r.roundNum}: ${r.toParDisplay}</span>`
-  ).join("");
-  return `<div class="golfer-rounds">${chips}</div>`;
+function renderRoundChips(rounds) {
+  if (!rounds.length) return "";
+  return `<div class="golfer-rounds">${
+    rounds.map(r => `<span class="round-chip ${scoreColorClass(r.toPar)}">R${r.roundNum}: ${r.toParDisplay}</span>`).join("")
+  }</div>`;
 }
 
-function renderHoleByHole(g, managerId, golferName, bbHighlightOn) {
-  if (!g.rounds.length) return "";
+// Unified scorecard renderer for player hole-by-hole and best ball breakdown.
+// opts.type = "player" | "bestball"
+// "player" opts: g, managerId, golferName, bbHighlightOn
+// "bestball" opts: (just rounds passed in, holes use .bestStrokes + .bestPlayers)
+function renderScorecard(rounds, opts) {
+  if (!rounds.length) return "";
 
-  // Build a map of which holes this player contributed to best ball, per round
-  // We need the result for this manager to look up best ball data
-  const result = state.leaderboard.find(r => r.manager.id === managerId);
-  const bbContribMap = {}; // { roundNum: Set<holeNum> }
-  if (result) {
-    for (const bbRound of result.bestBall.rounds) {
-      bbContribMap[bbRound.roundNum] = new Set();
-      for (const hData of bbRound.holes) {
-        if (hData.bestPlayers.includes(g.name)) {
-          bbContribMap[bbRound.roundNum].add(hData.hole);
-        }
+  let bbContribMap = {};
+  let html = `<div class="hole-breakdown">`;
+
+  if (opts.type === "player") {
+    // Build BB contribution map for highlight toggle
+    const result = state.leaderboard.find(r => r.manager.id === opts.managerId);
+    if (result) {
+      for (const bbRound of result.bestBall.rounds) {
+        bbContribMap[bbRound.roundNum] = new Set(
+          bbRound.holes.filter(h => h.bestPlayers.includes(opts.g.name)).map(h => h.hole)
+        );
       }
     }
+    const safeGolferName = opts.golferName.replace(/'/g, "\\'");
+    const toggleLabel = opts.bbHighlightOn ? "Hide BB Holes" : "Show BB Holes";
+    html += `<div class="hole-breakdown-header">
+      <div class="hole-breakdown-title">${opts.g.name} — Scorecard</div>
+      <button class="bb-toggle-btn ${opts.bbHighlightOn ? "active" : ""}"
+        onclick="event.stopPropagation(); toggleBBHighlight('${opts.managerId}', '${safeGolferName}')"
+        title="Highlight holes that contributed to best ball">${toggleLabel}</button>
+    </div>`;
   }
 
-  const safeGolferName = golferName.replace(/'/g, "\\'");
-  const toggleLabel = bbHighlightOn ? "Hide BB Holes" : "Show BB Holes";
-
-  let html = `<div class="hole-breakdown">`;
-  html += `<div class="hole-breakdown-header">`;
-  html += `<div class="hole-breakdown-title">${g.name} — Scorecard</div>`;
-  html += `<button class="bb-toggle-btn ${bbHighlightOn ? "active" : ""}"
-    onclick="event.stopPropagation(); toggleBBHighlight('${managerId}', '${safeGolferName}')"
-    title="Highlight holes that contributed to best ball">${toggleLabel}</button>`;
-  html += `</div>`;
-
-  for (const round of g.rounds) {
-    const bbHoles = bbContribMap[round.roundNum] ?? new Set();
-
-    // Split holes into front 9 and back 9
-    const front = [];
-    const back  = [];
+  for (const round of rounds) {
+    const front = [], back = [];
     for (let h = 1; h <= 18; h++) {
       const hData = round.holes.find(x => x.hole === h) ?? null;
-      if (h <= 9) front.push({ h, hData });
-      else         back.push({ h, hData });
+      (h <= 9 ? front : back).push({ h, hData });
     }
 
-    // Totals
-    const frontStrokes = front.reduce((s, { hData }) => s + (hData?.strokes ?? 0), 0);
-    const backStrokes  = back.reduce((s,  { hData }) => s + (hData?.strokes ?? 0), 0);
-    const frontPar     = front.reduce((s, { hData }) => s + (hData?.par ?? 0), 0);
-    const backPar      = back.reduce((s,  { hData }) => s + (hData?.par ?? 0), 0);
-    const frontPlayed  = front.some(({ hData }) => hData !== null);
-    const backPlayed   = back.some(({ hData })  => hData !== null);
+    const strokeKey   = opts.type === "bestball" ? "bestStrokes" : "strokes";
+    const sumStrokes  = arr => arr.reduce((s, { hData }) => s + (hData?.[strokeKey] ?? 0), 0);
+    const sumPar      = arr => arr.reduce((s, { hData }) => s + (hData?.par ?? 0), 0);
+    const anyPlayed   = arr => arr.some(({ hData }) => hData !== null);
 
-    const frontToPar = frontStrokes - frontPar;
-    const backToPar  = backStrokes  - backPar;
+    const frontStrokes = sumStrokes(front), backStrokes = sumStrokes(back);
+    const frontPar = sumPar(front), backPar = sumPar(back);
+    const frontPlayed = anyPlayed(front), backPlayed = anyPlayed(back);
+    const frontToPar = frontStrokes - frontPar, backToPar = backStrokes - backPar;
 
     html += `<div class="scorecard-round">`;
-    html += `<div class="scorecard-round-label">Round ${round.roundNum}:
-      <span class="${scoreColorClass(round.toPar)}">${round.toParDisplay}</span>
-    </div>`;
-    html += `<div class="scorecard-scroll-wrap">`;
-    html += `<table class="scorecard-table">`;
+    html += `<div class="scorecard-round-label">Round ${round.roundNum}: ${round.totalStrokes} <span class="${scoreColorClass(round.toPar)}">${round.toParDisplay}</span></div>`;
+    html += `<div class="scorecard-scroll-wrap"><table class="scorecard-table">`;
 
-    // Header row: hole numbers
-    html += `<thead><tr>`;
-    html += `<th class="sc-label-cell"></th>`;
+    // HOLE header row
+    html += `<thead><tr><th class="sc-label-cell">HOLE</th>`;
     for (const { h } of front) html += `<th class="sc-hole-header">${h}</th>`;
-    html += `<th class="sc-section-total">OUT</th>`;
+    html += `<th class="sc-section-total sc-header-total">OUT</th>`;
     for (const { h } of back)  html += `<th class="sc-hole-header">${h}</th>`;
-    html += `<th class="sc-section-total">IN</th>`;
-    html += `<th class="sc-section-total">TOT</th>`;
-    html += `</tr></thead>`;
+    html += `<th class="sc-section-total sc-header-total">IN</th>`;
+    html += `<th class="sc-section-total sc-header-total">TOT</th>`;
+    html += `</tr></thead><tbody>`;
 
-    // Par row
-    html += `<tbody><tr class="sc-par-row">`;
-    html += `<td class="sc-label-cell">PAR</td>`;
+    // PAR row
+    html += `<tr class="sc-par-row"><td class="sc-label-cell">PAR</td>`;
     for (const { hData } of front) html += `<td class="sc-par-cell">${hData?.par ?? "-"}</td>`;
     html += `<td class="sc-section-total sc-par-cell">${frontPlayed ? frontPar : "-"}</td>`;
     for (const { hData } of back)  html += `<td class="sc-par-cell">${hData?.par ?? "-"}</td>`;
-    html += `<td class="sc-section-total sc-par-cell">${backPlayed  ? backPar  : "-"}</td>`;
+    html += `<td class="sc-section-total sc-par-cell">${backPlayed ? backPar : "-"}</td>`;
     html += `<td class="sc-section-total sc-par-cell">${frontPlayed || backPlayed ? frontPar + backPar : "-"}</td>`;
     html += `</tr>`;
 
-    // Score row
-    html += `<tr class="sc-score-row">`;
-    html += `<td class="sc-label-cell">SCORE</td>`;
+    // SCORE row
+    html += `<tr class="sc-score-row"><td class="sc-label-cell">SCORE</td>`;
     for (const { h, hData } of front) {
-      const isBB = bbHighlightOn && bbHoles.has(h);
-      html += renderScorecardCell(hData, isBB);
+      const isBB = opts.type === "player" && opts.bbHighlightOn && (bbContribMap[round.roundNum]?.has(h) ?? false);
+      html += renderScorecardCell(hData, opts.type, isBB);
     }
-    const frontToParDisp = frontPlayed ? formatToPar(frontToPar) : "-";
-    html += `<td class="sc-section-total sc-score-cell ${frontPlayed ? scoreColorClass(frontToPar) : ""}">
-      <span class="sc-total-strokes">${frontPlayed ? frontStrokes : "-"}</span>
-      <span class="sc-total-topar">${frontToParDisp}</span>
-    </td>`;
+    html += renderTotalCell(frontPlayed, frontStrokes, frontToPar);
     for (const { h, hData } of back) {
-      const isBB = bbHighlightOn && bbHoles.has(h);
-      html += renderScorecardCell(hData, isBB);
+      const isBB = opts.type === "player" && opts.bbHighlightOn && (bbContribMap[round.roundNum]?.has(h) ?? false);
+      html += renderScorecardCell(hData, opts.type, isBB);
     }
-    const backToParDisp = backPlayed ? formatToPar(backToPar) : "-";
-    html += `<td class="sc-section-total sc-score-cell ${backPlayed ? scoreColorClass(backToPar) : ""}">
-      <span class="sc-total-strokes">${backPlayed ? backStrokes : "-"}</span>
-      <span class="sc-total-topar">${backToParDisp}</span>
-    </td>`;
-    const totalToParDisp = (frontPlayed || backPlayed) ? formatToPar(frontToPar + backToPar) : "-";
-    html += `<td class="sc-section-total sc-score-cell ${(frontPlayed || backPlayed) ? scoreColorClass(frontToPar + backToPar) : ""}">
-      <span class="sc-total-strokes">${(frontPlayed || backPlayed) ? frontStrokes + backStrokes : "-"}</span>
-      <span class="sc-total-topar">${totalToParDisp}</span>
-    </td>`;
-    html += `</tr></tbody></table>`;
-    html += `</div>`; // scorecard-scroll-wrap
-    html += `</div>`; // scorecard-round
+    html += renderTotalCell(backPlayed, backStrokes, backToPar);
+    html += renderTotalCell(frontPlayed || backPlayed, frontStrokes + backStrokes, frontToPar + backToPar);
+    html += `</tr>`;
+
+    // BY row (best ball only) — click-to-show tooltip
+    if (opts.type === "bestball") {
+      html += `<tr class="sc-by-row"><td class="sc-label-cell sc-by-label">BY</td>`;
+      for (const { hData } of front) html += renderByCell(hData);
+      html += `<td class="sc-section-total sc-by-cell"></td>`;
+      for (const { hData } of back)  html += renderByCell(hData);
+      html += `<td class="sc-section-total sc-by-cell"></td>`;
+      html += `<td class="sc-section-total sc-by-cell"></td>`;
+      html += `</tr>`;
+    }
+
+    html += `</tbody></table></div></div>`; // table, scroll-wrap, scorecard-round
   }
 
   html += `</div>`; // hole-breakdown
   return html;
 }
 
-function renderScorecardCell(hData, isBB) {
-  if (!hData) {
-    return `<td class="sc-score-cell sc-empty">–</td>`;
-  }
-  const bbClass = isBB ? " sc-bb-hole" : "";
-  return `<td class="sc-score-cell ${holeColorClass(hData.toPar)}${bbClass}">
-    <span class="sc-stroke">${hData.strokes}</span>
-  </td>`;
-}
-
-function renderBestBallBreakdown(result) {
-  const bb = result.bestBall;
-  let html = `<div class="bb-breakdown">`;
-  html += `<div class="detail-section-label">Best Ball Breakdown</div>`;
-
-  for (const round of bb.rounds) {
-    const front = [];
-    const back  = [];
-    for (let h = 1; h <= 18; h++) {
-      const hData = round.holes.find(x => x.hole === h) ?? null;
-      if (h <= 9) front.push({ h, hData });
-      else         back.push({ h, hData });
-    }
-
-    const frontStrokes = front.reduce((s, { hData }) => s + (hData?.bestStrokes ?? 0), 0);
-    const backStrokes  = back.reduce((s,  { hData }) => s + (hData?.bestStrokes ?? 0), 0);
-    const frontPar     = front.reduce((s, { hData }) => s + (hData?.par ?? 0), 0);
-    const backPar      = back.reduce((s,  { hData }) => s + (hData?.par ?? 0), 0);
-    const frontPlayed  = front.some(({ hData }) => hData !== null);
-    const backPlayed   = back.some(({ hData })  => hData !== null);
-
-    const frontToPar   = frontStrokes - frontPar;
-    const backToPar    = backStrokes  - backPar;
-
-    html += `<div class="bb-round-block">`;
-    html += `<div class="bb-round-header">
-      Round ${round.roundNum}:
-      <span class="${scoreColorClass(round.toPar)}">${round.toParDisplay}</span>
-    </div>`;
-
-    html += `<div class="scorecard-scroll-wrap">`;
-    html += `<table class="scorecard-table">`;
-
-    // Header row
-    html += `<thead><tr>`;
-    html += `<th class="sc-label-cell"></th>`;
-    for (const { h } of front) html += `<th class="sc-hole-header">${h}</th>`;
-    html += `<th class="sc-section-total">OUT</th>`;
-    for (const { h } of back)  html += `<th class="sc-hole-header">${h}</th>`;
-    html += `<th class="sc-section-total">IN</th>`;
-    html += `<th class="sc-section-total">TOT</th>`;
-    html += `</tr></thead>`;
-
-    // Par row
-    html += `<tbody><tr class="sc-par-row">`;
-    html += `<td class="sc-label-cell">PAR</td>`;
-    for (const { hData } of front) html += `<td class="sc-par-cell">${hData?.par ?? "-"}</td>`;
-    html += `<td class="sc-section-total sc-par-cell">${frontPlayed ? frontPar : "-"}</td>`;
-    for (const { hData } of back)  html += `<td class="sc-par-cell">${hData?.par ?? "-"}</td>`;
-    html += `<td class="sc-section-total sc-par-cell">${backPlayed  ? backPar  : "-"}</td>`;
-    html += `<td class="sc-section-total sc-par-cell">${frontPlayed || backPlayed ? frontPar + backPar : "-"}</td>`;
-    html += `</tr>`;
-
-    // Score row
-    html += `<tr class="sc-score-row">`;
-    html += `<td class="sc-label-cell">SCORE</td>`;
-    for (const { hData } of front) html += renderBBScorecardCell(hData);
-    const frontToParDisp = frontPlayed ? formatToPar(frontToPar) : "-";
-    html += `<td class="sc-section-total sc-score-cell ${frontPlayed ? scoreColorClass(frontToPar) : ""}">
-      <span class="sc-total-strokes">${frontPlayed ? frontStrokes : "-"}</span>
-      <span class="sc-total-topar">${frontToParDisp}</span>
-    </td>`;
-    for (const { hData } of back) html += renderBBScorecardCell(hData);
-    const backToParDisp = backPlayed ? formatToPar(backToPar) : "-";
-    html += `<td class="sc-section-total sc-score-cell ${backPlayed ? scoreColorClass(backToPar) : ""}">
-      <span class="sc-total-strokes">${backPlayed ? backStrokes : "-"}</span>
-      <span class="sc-total-topar">${backToParDisp}</span>
-    </td>`;
-    const totalToParDisp = (frontPlayed || backPlayed) ? formatToPar(frontToPar + backToPar) : "-";
-    html += `<td class="sc-section-total sc-score-cell ${(frontPlayed || backPlayed) ? scoreColorClass(frontToPar + backToPar) : ""}">
-      <span class="sc-total-strokes">${(frontPlayed || backPlayed) ? frontStrokes + backStrokes : "-"}</span>
-      <span class="sc-total-topar">${totalToParDisp}</span>
-    </td>`;
-    html += `</tr>`;
-
-    // Contributor initials row
-    html += `<tr class="sc-initials-row">`;
-    html += `<td class="sc-label-cell sc-initials-label">BY</td>`;
-    const allHoles = [...front, ...back];
-    for (let i = 0; i < allHoles.length; i++) {
-      const { hData } = allHoles[i];
-      html += `<td class="sc-initials-cell">${hData ? hData.bestPlayers.map(playerInitials).join(" ") : ""}</td>`;
-      if (i === 8) html += `<td class="sc-section-total sc-initials-cell"></td>`; // OUT spacer
-    }
-    html += `<td class="sc-section-total sc-initials-cell"></td>`; // IN spacer
-    html += `<td class="sc-section-total sc-initials-cell"></td>`; // TOT spacer
-    html += `</tr>`;
-
-    html += `</tbody></table>`;
-    html += `</div>`; // scorecard-scroll-wrap
-    html += `</div>`; // bb-round-block
-  }
-
-  html += `</div>`; // bb-breakdown
-  return html;
-}
-
-function renderBBScorecardCell(hData) {
+function renderScorecardCell(hData, type, isBB) {
   if (!hData) return `<td class="sc-score-cell sc-empty">–</td>`;
-  return `<td class="sc-score-cell ${holeColorClass(hData.toPar)}">
-    <span class="sc-stroke">${hData.bestStrokes}</span>
+  const strokes = type === "bestball" ? hData.bestStrokes : hData.strokes;
+  const bbClass = isBB ? " sc-bb-hole" : "";
+  return `<td class="sc-score-cell ${holeColorClass(hData.toPar)}${bbClass}"><span class="sc-stroke">${strokes}</span></td>`;
+}
+
+function renderTotalCell(played, strokes, toPar) {
+  if (!played) return `<td class="sc-section-total sc-score-cell"><span class="sc-total-strokes">-</span></td>`;
+  return `<td class="sc-section-total sc-score-cell ${scoreColorClass(toPar)}">
+    <span class="sc-total-strokes">${strokes}</span>
+    <span class="sc-total-topar">${formatToPar(toPar)}</span>
   </td>`;
+}
+
+function renderByCell(hData) {
+  if (!hData) return `<td class="sc-by-cell sc-empty-by"></td>`;
+  const initials = hData.bestPlayers.map(playerInitials).join("\u00A0");
+  // Tooltip shown on click via .tip-open class; data-tip holds the text
+  return `<td class="sc-by-cell" data-tip="${initials}" onclick="event.stopPropagation(); toggleTip(this)"></td>`;
 }
 
 function playerInitials(fullName) {
   if (!fullName) return "";
   const parts = fullName.trim().split(/\s+/);
-  if (parts.length === 1) return parts[0][0].toUpperCase();
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  return parts.length === 1 ? parts[0][0].toUpperCase() : (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
 // ============================================================
@@ -822,19 +589,13 @@ function holeColorClass(toPar) {
   return "hole-double";
 }
 
-function shortName(fullName) {
-  if (!fullName) return "";
-  const parts = fullName.split(" ");
-  if (parts.length < 2) return fullName;
-  return `${parts[0][0]}. ${parts.slice(1).join(" ")}`;
-}
-
 function setLoading(val) {
   state.loading = val;
   const btn = document.getElementById("refresh-btn");
   if (btn) btn.disabled = val;
+  // visibility:hidden preserves space, display:none would cause layout shift
   const ind = document.getElementById("loading-indicator");
-  if (ind) ind.style.display = val ? "inline" : "none";
+  if (ind) ind.style.visibility = val ? "visible" : "hidden";
 }
 
 function setError(msg) {
@@ -845,12 +606,17 @@ function setError(msg) {
 }
 
 function toggleManager(managerId) {
-  state.expandedManager = state.expandedManager === managerId ? null : managerId;
-  for (const key of [...state.expandedGolfers]) {
-    if (key.startsWith(managerId + "|")) state.expandedGolfers.delete(key);
-  }
-  for (const key of [...state.bbHighlight]) {
-    if (key.startsWith(managerId + "|")) state.bbHighlight.delete(key);
+  if (state.expandedManagers.has(managerId)) {
+    state.expandedManagers.delete(managerId);
+    for (const key of [...state.expandedGolfers]) {
+      if (key.startsWith(managerId + "|")) state.expandedGolfers.delete(key);
+    }
+    for (const key of [...state.bbHighlight]) {
+      if (key.startsWith(managerId + "|")) state.bbHighlight.delete(key);
+    }
+    state.expandedBB.delete(managerId);
+  } else {
+    state.expandedManagers.add(managerId);
   }
   renderLeaderboard();
 }
@@ -866,6 +632,15 @@ function toggleGolfer(managerId, golferName) {
   renderLeaderboard();
 }
 
+function toggleBBExpand(managerId) {
+  if (state.expandedBB.has(managerId)) {
+    state.expandedBB.delete(managerId);
+  } else {
+    state.expandedBB.add(managerId);
+  }
+  renderLeaderboard();
+}
+
 function toggleBBHighlight(managerId, golferName) {
   const key = `${managerId}|${golferName}`;
   if (state.bbHighlight.has(key)) {
@@ -874,6 +649,13 @@ function toggleBBHighlight(managerId, golferName) {
     state.bbHighlight.add(key);
   }
   renderLeaderboard();
+}
+
+function toggleTip(cell) {
+  const wasOpen = cell.classList.contains("tip-open");
+  // Close all tooltips
+  document.querySelectorAll(".sc-by-cell.tip-open").forEach(el => el.classList.remove("tip-open"));
+  if (!wasOpen) cell.classList.add("tip-open");
 }
 
 function setSortBy(col) {
@@ -890,9 +672,14 @@ async function init() {
   renderHeader();
   await fetchScores();
   setInterval(fetchScores, REFRESH_MS);
+  document.getElementById("refresh-btn")?.addEventListener("click", fetchScores);
 
-  const btn = document.getElementById("refresh-btn");
-  if (btn) btn.addEventListener("click", fetchScores);
+  // Close tooltips when clicking outside a BY cell
+  document.addEventListener("click", e => {
+    if (!e.target.classList.contains("sc-by-cell")) {
+      document.querySelectorAll(".sc-by-cell.tip-open").forEach(el => el.classList.remove("tip-open"));
+    }
+  });
 }
 
 document.addEventListener("DOMContentLoaded", init);
@@ -902,5 +689,7 @@ window.state             = state;
 window.fetchScores       = fetchScores;
 window.toggleManager     = toggleManager;
 window.toggleGolfer      = toggleGolfer;
+window.toggleBBExpand    = toggleBBExpand;
 window.toggleBBHighlight = toggleBBHighlight;
+window.toggleTip         = toggleTip;
 window.setSortBy         = setSortBy;

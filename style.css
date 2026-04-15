@@ -21,39 +21,42 @@
   --text-secondary: #8a9188;
   --text-muted:     #4e5450;
 
-  --green:      #4ade80;
-  --green-dim:  #22543d;
-  --green-deep: #0a1f12;
-  --red:        #f87171;
-  --red-dim:    #5c1f1f;
-  --red-deep:   #1f0a0a;
-  --amber:      #fbbf24;
-  --amber-dim:  #4a3200;
-  --amber-deep: #1f1200;
-  --purple:     #c084fc;
-  --purple-dim: #3b1f5c;
-  --purple-deep:#1a0a30;
+  --green:       #4ade80;
+  --green-dim:   #22543d;
+  --green-deep:  #0a1f12;
+  --red:         #f87171;
+  --red-dim:     #5c1f1f;
+  --red-deep:    #1f0a0a;
+  --amber:       #fbbf24;
+  --amber-dim:   #4a3200;
+  --amber-deep:  #1f1200;
+  --purple:      #c084fc;
+  --purple-dim:  #3b1f5c;
+  --purple-deep: #1a0a30;
 
   --gold:     #c9a84c;
-  --gold-dim: #3a2e10;
 
   --accent:    #4ade80;
   --radius:    4px;
   --radius-lg: 8px;
-
-  font-size: 16px;
 }
 
 html, body {
   background: var(--bg);
   color: var(--text-primary);
   font-family: 'DM Sans', sans-serif;
+  font-size: 16px;
   font-weight: 400;
   line-height: 1.5;
   min-height: 100vh;
+  /* Prevent horizontal overflow at the page level */
+  overflow-x: hidden;
 }
 
-/* ---- Header ---- */
+/* ============================================================
+   HEADER
+============================================================ */
+
 .site-header {
   background: var(--bg-surface);
   border-bottom: 1px solid var(--border);
@@ -80,6 +83,7 @@ html, body {
   color: var(--accent);
   letter-spacing: 2px;
   line-height: 1;
+  white-space: nowrap;
 }
 
 .brand-text { display: flex; flex-direction: column; gap: 1px; }
@@ -98,17 +102,19 @@ html, body {
   text-transform: uppercase;
 }
 
-.header-actions { display: flex; align-items: center; gap: 12px; }
+.header-actions { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
 
 .last-updated {
   font-size: 11px;
   color: var(--text-muted);
   font-family: 'DM Mono', monospace;
+  white-space: nowrap;
 }
 
 .loading-dot {
   color: var(--accent);
   font-size: 10px;
+  visibility: hidden; /* JS sets visibility:visible when loading */
   animation: pulse 1s ease-in-out infinite;
 }
 
@@ -130,14 +136,23 @@ html, body {
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
-  transition: border-color 0.15s, color 0.15s;
+  /* No :hover transition on touch — handled via @media hover */
   letter-spacing: 0.03em;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
-.refresh-btn:hover    { border-color: var(--accent); color: var(--accent); }
+/* Only apply hover styles on devices that support true hover (not touch) */
+@media (hover: hover) {
+  .refresh-btn:hover { border-color: var(--accent); color: var(--accent); }
+}
+
 .refresh-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-/* ---- Tournament Banner ---- */
+/* ============================================================
+   TOURNAMENT BANNER
+============================================================ */
+
 .tournament-banner {
   background: var(--bg-surface);
   border-bottom: 1px solid var(--border);
@@ -163,18 +178,14 @@ html, body {
   line-height: 1;
 }
 
-.tournament-loc {
-  font-size: 12px;
-  color: var(--text-muted);
-  margin-top: 3px;
-  letter-spacing: 0.02em;
-}
-
+.tournament-loc,
 .tournament-dates {
   font-size: 12px;
   color: var(--text-muted);
   letter-spacing: 0.02em;
 }
+
+.tournament-loc { margin-top: 3px; }
 
 .banner-nav { display: flex; gap: 6px; flex-wrap: wrap; }
 
@@ -188,18 +199,27 @@ html, body {
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.15s;
   letter-spacing: 0.03em;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
-.tourney-tab:hover { border-color: var(--text-secondary); color: var(--text-secondary); }
+@media (hover: hover) {
+  .tourney-tab:hover { border-color: var(--text-secondary); color: var(--text-secondary); }
+}
+
 .tourney-tab.active { background: var(--accent); border-color: var(--accent); color: #0d0f0e; }
 
-/* ---- Leaderboard ---- */
+/* ============================================================
+   LEADERBOARD TABLE
+============================================================ */
+
 .leaderboard-wrap {
   max-width: 1040px;
   margin: 24px auto 16px;
   padding: 0 20px;
+  /* Critical: contain width so inner content doesn't overflow page */
+  width: 100%;
 }
 
 .leaderboard-table {
@@ -208,6 +228,8 @@ html, body {
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   overflow: hidden;
+  /* Table-layout fixed keeps columns from blowing out on mobile */
+  table-layout: fixed;
 }
 
 .leaderboard-table thead tr {
@@ -225,27 +247,21 @@ html, body {
   text-align: left;
   text-transform: uppercase;
   white-space: nowrap;
+  overflow: hidden;
 }
 
-.leaderboard-table .th-rank   { width: 48px; text-align: center; }
-.leaderboard-table .th-score  { width: 120px; text-align: center; }
-.leaderboard-table .th-expand { width: 32px; }
+.leaderboard-table .th-rank   { width: 44px; text-align: center; }
+.leaderboard-table .th-name   { /* flexible */ }
+.leaderboard-table .th-score  { width: 88px; text-align: center; }
+.leaderboard-table .th-expand { width: 28px; }
 
-/* Sortable headers */
-.th-sortable {
-  cursor: pointer;
-  user-select: none;
-  transition: color 0.15s;
+.th-sortable { cursor: pointer; user-select: none; }
+@media (hover: hover) {
+  .th-sortable:hover { color: var(--text-secondary); }
 }
-
-.th-sortable:hover { color: var(--text-secondary); }
-
-.th-sortable.sort-active {
-  color: var(--accent);
-}
-
-.sort-arrow { font-size: 8px; margin-left: 4px; opacity: 0.5; }
-.sort-active .sort-arrow { opacity: 1; }
+.th-sortable.sort-active  { color: var(--accent); }
+.sort-arrow               { font-size: 8px; margin-left: 4px; opacity: 0.5; }
+.sort-active .sort-arrow  { opacity: 1; }
 
 /* Manager rows */
 .manager-row {
@@ -256,42 +272,60 @@ html, body {
 }
 
 .manager-row:nth-child(even) { background: var(--bg-row-alt); }
-.manager-row:hover            { background: var(--bg-card); }
-.manager-row.expanded         { background: var(--bg-card); border-bottom-color: transparent; }
-.manager-row.no-roster        { opacity: 0.5; cursor: default; }
 
+@media (hover: hover) {
+  .manager-row:hover { background: var(--bg-card); }
+}
+
+.manager-row.expanded  { background: var(--bg-card); border-bottom-color: transparent; }
+.manager-row.no-roster { opacity: 0.5; cursor: default; }
+
+/* Constrain all td padding; detail-row overrides below */
 .leaderboard-table td {
-  padding: 14px 16px;
+  padding: 12px 10px;
   vertical-align: middle;
+  overflow: hidden;
 }
 
 /* Rank cell */
 .rank-cell {
   text-align: center;
   font-family: 'Bebas Neue', sans-serif;
-  font-size: 22px;
+  font-size: 20px;
   color: var(--text-muted);
-  width: 48px;
-  padding-left: 12px;
+  padding-left: 8px;
+  padding-right: 4px;
 }
 
-.manager-row:first-child .rank-cell   { color: var(--gold); }
-.manager-row:nth-child(2) .rank-cell  { color: #a0a0a8; }
-.manager-row:nth-child(3) .rank-cell  { color: #a07050; }
+/* Medal colours only for the first 3 ranked rows (not detail rows) */
+.manager-row:nth-child(1) .rank-cell { color: var(--gold); }
+.manager-row:nth-child(2) .rank-cell { color: #a0a0a8; }
+.manager-row:nth-child(3) .rank-cell { color: #a07050; }
 
 /* Name cell */
-.name-cell { display: flex; flex-direction: column; gap: 2px; }
+.name-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0; /* allow text to truncate inside fixed layout */
+}
 
 .manager-name {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 500;
   color: var(--text-primary);
   letter-spacing: 0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .team-name {
-  font-size: 11px;
-  color: var(--text-muted)
+  font-size: 10px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Score cells */
@@ -300,7 +334,7 @@ html, body {
 .score-primary {
   display: block;
   font-family: 'Bebas Neue', sans-serif;
-  font-size: 24px;
+  font-size: 22px;
   letter-spacing: 1px;
   line-height: 1;
 }
@@ -315,23 +349,23 @@ html, body {
   margin-top: 2px;
 }
 
-/* Score colour classes — applied to cells AND inline elements */
-.score-under .score-primary,
-.score-under { color: var(--green); }
-.score-even  .score-primary,
-.score-even  { color: var(--text-primary); }
-.score-over  .score-primary,
-.score-over  { color: var(--red); }
+/* Score colour classes */
+.score-under .score-primary, .score-under { color: var(--green); }
+.score-even  .score-primary, .score-even  { color: var(--text-primary); }
+.score-over  .score-primary, .score-over  { color: var(--red); }
 
 /* Expand chevron */
 .expand-cell {
   text-align: center;
   color: var(--text-muted);
   font-size: 11px;
-  padding: 0 8px;
+  padding: 0 6px;
 }
 
-/* ---- State cells ---- */
+/* ============================================================
+   STATE CELLS
+============================================================ */
+
 .loading-cell, .error-cell, .info-cell {
   text-align: center;
   padding: 48px 20px;
@@ -344,17 +378,28 @@ html, body {
 .error-cell { color: var(--red); }
 .info-cell  { color: var(--amber); padding: 12px 20px; }
 
-/* ---- Detail Panel ---- */
+/* ============================================================
+   DETAIL PANEL
+   The detail-row td must NOT clip its children — overflow visible.
+   Scorecards inside scroll independently.
+============================================================ */
+
 .detail-row td {
   padding: 0;
   background: var(--bg-detail);
   border-bottom: 1px solid var(--border);
+  /* Allow full width — no overflow clipping here */
+  overflow: visible;
 }
 
 .detail-panel {
-  padding: 16px 20px 24px;
+  padding: 14px 14px 20px;
   border-top: 1px solid var(--border-soft);
   border-bottom: 1px solid var(--border-soft);
+  /* Constrain width to the cell, never wider than the viewport */
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .detail-section-label {
@@ -367,15 +412,19 @@ html, body {
   margin-top: 4px;
 }
 
-/* ---- Golfer List ---- */
+/* ============================================================
+   GOLFER LIST
+============================================================ */
+
 .golfer-list {
   display: flex;
   flex-direction: column;
-  gap: 0;
-  margin-bottom: 20px;
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   overflow: hidden;
+  /* Must not exceed available width */
+  width: 100%;
+  max-width: 100%;
 }
 
 .golfer-list-item {
@@ -383,54 +432,71 @@ html, body {
   border-bottom: 1px solid var(--border-soft);
 }
 
-.golfer-list-item:last-child {
-  border-bottom: none;
-}
-
-.golfer-list-item.cut       { opacity: 0.6; }
-.golfer-list-item.not-found { opacity: 0.5; }
-.golfer-list-item.expanded  { background: var(--bg-surface); }
+.golfer-list-item:last-child  { border-bottom: none; }
+.golfer-list-item.cut         { opacity: 0.6; }
+.golfer-list-item.not-found   { opacity: 0.5; }
+.golfer-list-item.expanded    { background: var(--bg-surface); }
+.golfer-list-item.bb-row      { border-top: 1px solid var(--border); }
 
 .golfer-list-main {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 14px;
+  padding: 9px 12px;
   cursor: pointer;
-  transition: background 0.1s;
+  gap: 8px;
+  /* Prevent this row from overflowing */
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.golfer-list-main:hover { background: var(--bg-row); }
+.golfer-list-main.no-cursor { cursor: default; }
+
+@media (hover: hover) {
+  .golfer-list-main:hover { background: var(--bg-row); }
+}
 
 .golfer-list-left {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  min-width: 0;
+  flex-shrink: 1;
+  overflow: hidden;
 }
 
 .golfer-list-right {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  flex-shrink: 0; /* Right side never squishes */
 }
 
 .golfer-expand-chevron {
   font-size: 10px;
   color: var(--text-muted);
-  min-width: 10px;
+  flex-shrink: 0;
 }
 
+/* Player name & position — always on one line, truncate if too long */
 .golfer-name {
   font-size: 13px;
   font-weight: 500;
   color: var(--text-secondary);
-  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
+
+.golfer-name.bb-label { color: var(--text-primary); }
 
 .golfer-position {
   font-size: 11px;
   color: var(--text-muted);
   font-family: 'DM Mono', monospace;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .golfer-score {
@@ -439,26 +505,36 @@ html, body {
   letter-spacing: 1px;
   line-height: 1;
   color: var(--text-primary);
+  flex-shrink: 0;
 }
 
 .golfer-score.score-under { color: var(--green); }
 .golfer-score.score-even  { color: var(--text-primary); }
 .golfer-score.score-over  { color: var(--red); }
 
+/* Round chips — nowrap, flex row, never line-break */
+.golfer-rounds {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
 .round-chip {
   font-family: 'DM Mono', monospace;
   font-size: 10px;
-  padding: 2px 6px;
+  padding: 2px 5px;
   border-radius: 2px;
   background: var(--bg-surface);
   border: 1px solid var(--border);
+  white-space: nowrap;
 }
 
-.round-chip.score-under { color: var(--green); border-color: var(--green-dim); background: var(--green-deep); }
-.round-chip.score-even  { color: var(--text-primary);  border-color: var(--text-muted); background: var(--bg-surface);}
-.round-chip.score-over  { color: var(--red);   border-color: var(--red-dim);   background: var(--red-deep); }
+.round-chip.score-under { color: var(--green);        border-color: var(--green-dim); background: var(--green-deep); }
+.round-chip.score-even  { color: var(--text-primary); border-color: var(--text-muted); }
+.round-chip.score-over  { color: var(--red);          border-color: var(--red-dim);   background: var(--red-deep); }
 
-/* ---- cut badge (kept) ---- */
+/* Cut / WD badges */
 .cut-badge {
   display: inline-block;
   font-size: 9px;
@@ -470,28 +546,30 @@ html, body {
   letter-spacing: 0.05em;
   vertical-align: middle;
   margin-left: 4px;
+  flex-shrink: 0;
 }
 
 .wd-badge { background: var(--amber-dim); color: var(--amber); }
 
-.golfer-rounds {
-  display: flex;
-  flex-wrap: nowrap;
-  gap: 4px;
-}
+/* ============================================================
+   HOLE BREAKDOWN (scorecard container)
+============================================================ */
 
-/* ---- Hole Breakdown wrapper ---- */
 .hole-breakdown {
   background: var(--bg-detail);
   border-top: 1px solid var(--border-soft);
-  padding: 14px 14px 16px;
+  padding: 12px 12px 14px;
+  /* Must not overflow the list item */
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .hole-breakdown-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
   flex-wrap: wrap;
   gap: 8px;
 }
@@ -503,7 +581,7 @@ html, body {
   letter-spacing: 0.04em;
 }
 
-/* BB highlight toggle button */
+/* BB highlight toggle */
 .bb-toggle-btn {
   padding: 4px 10px;
   background: transparent;
@@ -514,63 +592,75 @@ html, body {
   font-size: 10px;
   letter-spacing: 0.06em;
   cursor: pointer;
-  transition: all 0.15s;
   text-transform: uppercase;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
-.bb-toggle-btn:hover  { border-color: var(--green-dim); color: var(--green); }
+@media (hover: hover) {
+  .bb-toggle-btn:hover { border-color: var(--green-dim); color: var(--green); }
+}
+
 .bb-toggle-btn.active { background: var(--green-deep); border-color: var(--green-dim); color: var(--green); }
 
-/* ---- Scorecard ---- */
-.scorecard-round {
-  margin-bottom: 14px;
-}
+/* ============================================================
+   SCORECARD
+============================================================ */
 
+.scorecard-round { margin-bottom: 12px; }
 .scorecard-round:last-child { margin-bottom: 0; }
 
 .scorecard-round-label {
   font-family: 'DM Mono', monospace;
   font-size: 11px;
   color: var(--text-muted);
-  margin-bottom: 6px;
+  margin-bottom: 5px;
   display: flex;
-  gap: 6px;
+  gap: 5px;
   align-items: center;
 }
 
+/* Scroll wrapper: only this element scrolls horizontally */
 .scorecard-scroll-wrap {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
-  display: block;
+  /* Fill available width but scroll internally */
   width: 100%;
   max-width: 100%;
 }
 
 .scorecard-table {
   border-collapse: collapse;
-  min-width: 560px;
+  /* Fixed minimum so all 18 holes + totals render properly;
+     on desktop with room it expands to fill via width:100% on parent */
+  min-width: 520px;
   width: max-content;
 }
 
+/* All cells share these base styles */
 .scorecard-table th,
 .scorecard-table td {
   text-align: center;
   padding: 0;
+  width: 28px;
   min-width: 28px;
 }
 
+/* Label column (HOLE / PAR / SCORE / BY) */
 .sc-label-cell {
   font-family: 'DM Mono', monospace;
   font-size: 9px;
   letter-spacing: 0.08em;
   color: var(--text-muted);
   text-transform: uppercase;
-  padding: 4px 6px 4px 2px;
+  padding: 3px 6px 3px 2px;
   text-align: left;
   white-space: nowrap;
-  min-width: 44px;
+  width: 46px;
+  min-width: 46px;
 }
 
+/* Hole number header */
 .sc-hole-header {
   font-family: 'DM Mono', monospace;
   font-size: 10px;
@@ -580,6 +670,7 @@ html, body {
   border-bottom: 1px solid var(--border-soft);
 }
 
+/* OUT / IN / TOT column */
 .sc-section-total {
   font-family: 'DM Mono', monospace;
   font-size: 9px;
@@ -590,8 +681,16 @@ html, body {
   border-right: 1px solid var(--border);
   padding: 3px 4px;
   white-space: nowrap;
+  width: 36px;
+  min-width: 36px;
 }
 
+/* Header row totals share the hole-header bottom border */
+.sc-header-total {
+  border-bottom: 1px solid var(--border-soft);
+}
+
+/* Par row */
 .sc-par-cell {
   font-family: 'DM Mono', monospace;
   font-size: 10px;
@@ -600,39 +699,35 @@ html, body {
   border-bottom: 1px solid var(--border-soft);
 }
 
+/* Score cells */
 .sc-score-cell {
   font-family: 'Bebas Neue', sans-serif;
   font-size: 15px;
   padding: 4px 2px;
-  position: relative;
   vertical-align: middle;
 }
 
-.sc-stroke {
-  display: block;
-  line-height: 1;
-}
+.sc-stroke { display: block; line-height: 1; }
 
 .sc-empty { color: var(--text-muted); font-size: 11px; }
 
-/* Hole color coding on scorecard cells */
+/* Hole colour coding */
 .sc-score-cell.hole-eagle  { background: var(--purple-deep); color: var(--purple); }
 .sc-score-cell.hole-birdie { background: var(--green-deep);  color: var(--green);  }
 .sc-score-cell.hole-par    { background: var(--bg-card);     color: var(--text-primary); }
 .sc-score-cell.hole-bogey  { background: var(--amber-deep);  color: var(--amber);  }
 .sc-score-cell.hole-double { background: var(--red-deep);    color: var(--red);    }
 
-/* BB highlight on individual player scorecard */
+/* BB highlight outline on player scorecard */
 .sc-bb-hole {
   outline: 1px solid var(--green-dim);
   outline-offset: -2px;
+  position: relative;
   z-index: 1;
 }
 
-/* Section totals as score cells */
-.sc-section-total.sc-score-cell {
-  vertical-align: middle;
-}
+/* Section total score cells */
+.sc-section-total.sc-score-cell { vertical-align: middle; }
 
 .sc-total-strokes {
   display: block;
@@ -649,52 +744,44 @@ html, body {
   margin-top: 1px;
 }
 
-/* Initials row in BB breakdown */
-.sc-initials-row td { padding: 2px 2px; }
+/* BY row — click-to-reveal tooltip */
+.sc-by-row td { padding: 0; }
 
-.sc-initials-cell {
-  font-family: 'DM Mono', monospace;
-  font-size: 8px;
-  color: var(--text-muted);
-  letter-spacing: 0.02em;
-  vertical-align: middle;
-  white-space: nowrap;
-}
-
-.sc-initials-label {
+.sc-by-label {
   font-family: 'DM Mono', monospace;
   font-size: 9px;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  padding: 2px 6px 2px 2px;
   text-align: left;
+  padding: 3px 6px 3px 2px;
 }
 
-/* ---- Best Ball Breakdown ---- */
-.bb-breakdown { margin-top: 4px; }
-
-.bb-round-block {
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 12px 16px;
-  margin-bottom: 10px;
-}
-
-.bb-round-block:last-child { margin-bottom: 0; }
-
-.bb-round-header {
+.sc-by-cell {
   font-family: 'DM Mono', monospace;
-  font-size: 11px;
-  color: var(--text-muted);
-  margin-bottom: 10px;
-  display: flex;
-  gap: 8px;
-  align-items: center;
+  font-size: 9px;
+  color: transparent; /* Initials hidden by default */
+  cursor: pointer;
+  padding: 3px 2px;
+  border-top: 1px solid var(--border-soft);
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select: none;
 }
 
-/* ---- Footer ---- */
+.sc-by-cell:not(.sc-empty-by):hover,
+.sc-by-cell.tip-open {
+  color: var(--text-muted);
+  background: var(--bg-row);
+}
+
+.sc-empty-by { cursor: default; }
+
+/* ============================================================
+   FOOTER
+============================================================ */
+
 .site-footer {
   max-width: 1040px;
   margin: 0 auto;
@@ -703,35 +790,42 @@ html, body {
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: 0px;
   font-size: 11px;
   color: var(--text-muted);
   letter-spacing: 0.04em;
   font-family: 'DM Mono', monospace;
-}
-
-.site-footer-top {
   font-weight: 100;
 }
 
-.site-footer-bottom {
-  font-weight: 100;
-}
+/* ============================================================
+   RESPONSIVE
+============================================================ */
 
-/* ---- Responsive ---- */
 @media (max-width: 710px) {
   .brand-full, .brand-season { display: none; }
 }
+
 @media (max-width: 640px) {
-  .header-inner { height: 44px; padding: 0 14px }
-  .header-brand { gap: 0px }
-  .header-actions { gap: 8px }
-  .brand-abbr { font-size: 24px; }
+  .header-inner   { height: 44px; padding: 0 12px; }
+  .header-brand   { gap: 0; }
+  .header-actions { gap: 8px; }
+  .brand-abbr     { font-size: 22px; }
+  .last-updated   { display: none; } /* saves space on small screens */
 
-  .leaderboard-wrap { padding: 0 12px; margin-top: 16px; }
+  .leaderboard-wrap { padding: 0 10px; margin-top: 14px; }
 
-  .score-primary { font-size: 20px; }
-  .banner-inner { padding: 12px 14px; gap: 12px; }
-  .tourney-tab { font-size: 11px; padding: 5px 10px; }
-  .scorecard-table { min-width: 480px; }
+  /* Tighten up leaderboard columns on mobile */
+  .leaderboard-table .th-rank  { width: 36px; }
+  .leaderboard-table .th-score { width: 72px; }
+  .leaderboard-table .th-expand { width: 22px; }
+
+  .leaderboard-table td { padding: 10px 8px; }
+  .rank-cell  { font-size: 18px; }
+  .score-primary { font-size: 18px; }
+  .score-label   { display: none; } /* too cramped on small screens */
+  .manager-name  { font-size: 13px; }
+
+  .banner-inner   { padding: 10px 12px; gap: 10px; }
+  .tourney-tab    { font-size: 11px; padding: 5px 8px; }
+  .detail-panel   { padding: 10px 10px 16px; }
 }
