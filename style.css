@@ -289,10 +289,9 @@ html, body {
   letter-spacing: 0.01em;
 }
 
-.roster-count {
+.team-name {
   font-size: 11px;
-  color: var(--text-muted);
-  font-family: 'DM Mono', monospace;
+  color: var(--text-muted)
 }
 
 /* Score cells */
@@ -355,6 +354,7 @@ html, body {
 .detail-panel {
   padding: 16px 20px 24px;
   border-top: 1px solid var(--border-soft);
+  border-bottom: 1px solid var(--border-soft);
 }
 
 .detail-section-label {
@@ -420,6 +420,10 @@ html, body {
   margin-bottom: 4px;
 }
 
+.golfer-score.score-under { color: var(--green); }
+.golfer-score.score-even  { color: var(--text-primary); }
+.golfer-score.score-over  { color: var(--red); }
+
 .golfer-position {
   font-size: 11px;
   color: var(--text-muted);
@@ -440,10 +444,10 @@ html, body {
   border-radius: 2px;
   background: var(--bg-surface);
   border: 1px solid var(--border);
-  color: var(--text-muted);
 }
 
 .round-chip.score-under { color: var(--green); border-color: var(--green-dim); background: var(--green-deep); }
+.round-chip.score-even  { color: var(--text-primary);  border-color: var(--text-muted); background: var(--bg-surface);}
 .round-chip.score-over  { color: var(--red);   border-color: var(--red-dim);   background: var(--red-deep); }
 
 /* ---- Hole-by-Hole Breakdown ---- */
@@ -460,7 +464,6 @@ html, body {
   font-weight: 500;
   color: var(--text-secondary);
   margin-bottom: 12px;
-  font-family: 'DM Mono', monospace;
   letter-spacing: 0.04em;
 }
 

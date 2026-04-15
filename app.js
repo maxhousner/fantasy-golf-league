@@ -124,10 +124,8 @@ function parseESPN(data) {
     const name     = comp.athlete?.displayName;
     if (!name) continue;
 
-    const status   = comp.status?.type?.name ?? "";
-    const position = comp.status?.position?.displayText ?? "--";
-    const missedCut = status === "STATUS_CUT" || status === "STATUS_MISSED_CUT";
-    const withdrawn = status === "STATUS_WITHDRAWN" || status === "STATUS_DQ";
+    const position  = comp.order ? `${comp.order}` : "--";
+    const missedCut = inferMissedCut(comp);
 
     // Overall to-par from top-level score field (e.g. "E", "-5", "+2")
     const overallToParStr = comp.score ?? "E";
@@ -139,9 +137,7 @@ function parseESPN(data) {
     scores[name] = {
       name,
       position,
-      status,
       missedCut,
-      withdrawn,
       overallToPar,
       overallToParDisplay: comp.score ?? "E",
       rounds,  // array of round objects (see parseRounds)
@@ -218,6 +214,17 @@ function parseToParValue(str) {
   if (s === "E") return 0;
   const n = parseInt(s);
   return isNaN(n) ? 0 : n;
+}
+
+function inferMissedCut(comp) {
+  const linescores = comp.linescores ?? [];
+  const roundsWithHoles = linescores.filter(ls =>
+    ls.linescores && ls.linescores.length > 0 &&
+    !(ls.displayValue === "-" && ls.value === 0)
+  );
+  return roundsWithHoles.length === 2 &&
+    linescores.length >= 3 &&
+    (linescores[2]?.linescores?.length ?? 0) === 0;
 }
 
 // ============================================================
@@ -449,7 +456,7 @@ function renderLeaderboard() {
   if (state.tournamentState === "pre") {
     const tournament = TOURNAMENTS[ACTIVE_TOURNAMENT];
     html += `<tr><td colspan="5" class="info-cell">
-      Tournament Starts: ${formatDateDisplay(tournament.startDate)} | Player Draft: ${formatDateDisplay(tournament.startDate - 7)}
+      Tournament Starts: ${formatDateDisplay(tournament.startDate)} | Player Draft: ${formatDateDisplay(tournament.startDate - 4)}
     </td></tr>`;
   }
 
@@ -470,7 +477,7 @@ function renderLeaderboard() {
         <td class="rank-cell">${result.rank}</td>
         <td class="name-cell">
           <span class="manager-name">${result.manager.name}</span>
-          <span class="roster-count">${result.manager.teamName}</span>
+          <span class="team-name">${result.manager.teamName}</span>
         </td>
         <td class="score-cell ${hasScores ? scoreColorClass(result.combined.total) : ""}">
           <span class="score-primary">${result.combined.totalDisplay}</span>
@@ -506,12 +513,9 @@ function renderLeaderboard() {
           continue;
         }
 
-        const cutBadge = g.missedCut
-          ? `<span class="cut-badge">CUT</span>`
-          : g.withdrawn ? `<span class="cut-badge wd-badge">WD</span>` : "";
-
+        const cutBadge = g.missedCut? `<span class="cut-badge">MC</span>` : "";
         html += `
-          <div class="golfer-card ${g.missedCut || g.withdrawn ? "cut" : ""}"
+          <div class="golfer-card ${g.missedCut ? "cut" : ""}"
                onclick="toggleGolfer('${result.manager.id}', '${name.replace(/'/g, "\\'")}')">
             <div class="golfer-name">${name} ${cutBadge}</div>
             <div class="golfer-score ${scoreColorClass(g.overallToPar)}">${g.overallToParDisplay}</div>
@@ -558,11 +562,11 @@ function renderRoundSummary(g) {
 function renderHoleByHole(g) {
   if (!g.rounds.length) return "";
   let html = `<div class="hole-breakdown">`;
-  html += `<div class="hole-breakdown-title">${g.name} — Hole by Hole</div>`;
+  html += `<div class="hole-breakdown-title">${g.name} - Scorecard</div>`;
 
   for (const round of g.rounds) {
     html += `<div class="round-row">`;
-    html += `<span class="round-label">R${round.roundNum} <span class="${scoreColorClass(round.toPar)}">${round.toParDisplay}</span></span>`;
+    html += `<span class="round-label">R${round.roundNum}: ${round.totalStrokes}<span class="${scoreColorClass(round.toPar)}">${round.toParDisplay}</span></span>`;
     html += `<div class="holes-strip">`;
 
     for (let h = 1; h <= 18; h++) {
