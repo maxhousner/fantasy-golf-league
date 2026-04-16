@@ -1,5 +1,5 @@
 // ============================================================
-//  SPGA — Sub-Par Golf Association
+//  SPGA FANTASY — Sub-Par Golf Association Fantasy Golf League
 //  app.js  |  ESPN API + Scoring Engine + UI Controller
 // ============================================================
 
@@ -107,17 +107,48 @@ async function fetchScores() {
 function parseESPN(data) {
   const scores = {};
   const competitors = data?.events?.[0]?.competitions?.[0]?.competitors ?? [];
+
+  // First pass: build player objects without positions
+  const playerList = [];
   for (const comp of competitors) {
     const name = comp.athlete?.displayName;
     if (!name) continue;
-    scores[name] = {
+    playerList.push({
       name,
-      position:            comp.order ? `${comp.order}` : "--",
+      order:               comp.order ?? 999,
       missedCut:           inferMissedCut(comp),
       overallToPar:        parseToParValue(comp.score ?? "E"),
       overallToParDisplay: comp.score ?? "E",
       rounds:              parseRounds(comp.linescores ?? []),
-    };
+    });
+  }
+
+  // Rank a sorted group, prefixing ties with "T"
+  function assignPositions(list, startRank) {
+    let rank = startRank;
+    for (let i = 0; i < list.length; ) {
+      const score = list[i].overallToPar;
+      let j = i;
+      while (j < list.length && list[j].overallToPar === score) j++;
+      const tied = j - i > 1;
+      for (let k = i; k < j; k++) list[k].position = tied ? `T${rank}` : `${rank}`;
+      rank = j + 1;
+      i = j;
+    }
+  }
+
+  // Active and cut players ranked separately, each sorted by score then ESPN order
+  const byScore = (a, b) => a.overallToPar - b.overallToPar || a.order - b.order;
+  const active  = playerList.filter(p => !p.missedCut).sort(byScore);
+  const cut     = playerList.filter(p =>  p.missedCut).sort(byScore);
+
+  assignPositions(active, 1);
+  assignPositions(cut, active.length + 1);
+
+  for (const group of [active, cut]) {
+    for (const player of group) {
+      scores[player.name] = { name: player.name, position: player.position ?? "--", missedCut: player.missedCut, overallToPar: player.overallToPar, overallToParDisplay: player.overallToParDisplay, rounds: player.rounds };
+    }
   }
   return scores;
 }
@@ -268,7 +299,7 @@ function assignRanks(results) {
   let rank = 1;
   for (let i = 0; i < results.length; i++) {
     if (!results[i].golferNames.length) { results[i].rank = "--"; continue; }
-    if (i > 0 && results[i].golferNames.length) {
+    if (i > 0) {
       const p = results[i-1], c = results[i];
       if (!(p.combined.total === c.combined.total && p.bestBall.total === c.bestBall.total)) rank = i + 1;
     }
@@ -320,7 +351,7 @@ function renderLeaderboard() {
 
   if (state.tournamentState === "pre") {
     const t = TOURNAMENTS[ACTIVE_TOURNAMENT];
-    html += `<tr><td colspan="5" class="info-cell">Tournament Starts: ${formatDateDisplay(t.startDate)}</td></tr>`;
+    html += `<tr><td colspan="5" class="info-cell">Tournament Starts: ${formatDateDisplay(t.startDate)} | Draft: ${formatDateDisplay(t.startDate-4)}</td></tr>`;
   }
   if (state.error) {
     html += `<tr><td colspan="5" class="error-cell" style="padding:8px 20px;">${state.error}</td></tr>`;
@@ -333,6 +364,7 @@ function renderLeaderboard() {
 
     html += `
       <tr class="manager-row ${isExpanded ? "expanded" : ""} ${!hasRoster ? "no-roster" : ""}"
+          data-rank="${result.rank}"
           onclick="${hasRoster ? `toggleManager('${result.manager.id}')` : ""}">
         <td class="rank-cell">${result.rank}</td>
         <td class="name-cell">
@@ -341,11 +373,9 @@ function renderLeaderboard() {
         </td>
         <td class="score-cell ${hasScores ? scoreColorClass(result.combined.total) : ""}">
           <span class="score-primary">${result.combined.totalDisplay}</span>
-          <span class="score-label">Combined</span>
         </td>
         <td class="score-cell ${hasScores ? scoreColorClass(result.bestBall.total) : ""}">
           <span class="score-primary">${result.bestBall.totalDisplay}</span>
-          <span class="score-label">Best Ball</span>
         </td>
         <td class="expand-cell">${hasRoster ? (isExpanded ? "▲" : "▼") : ""}</td>
       </tr>`;
@@ -385,7 +415,6 @@ function renderLeaderboard() {
                 <span class="golfer-position">${g.position}</span>
               </div>
               <div class="golfer-list-right">
-                ${renderRoundChips(g.rounds)}
                 <span class="golfer-score ${scoreColorClass(g.overallToPar)}">${g.overallToParDisplay}</span>
                 <span class="golfer-expand-chevron">${isGolferExpanded ? "▲" : "▼"}</span>
               </div>
@@ -400,28 +429,28 @@ function renderLeaderboard() {
         html += `</div>`; // golfer-list-item
       }
 
-      // Best ball expandable row — styled like a golfer row
+      html += `</div>`; // golfer-list
+
+      // Best ball expandable row — outside the roster list
       if (result.bestBall.rounds.length > 0) {
         const bbExpanded = state.expandedBB.has(result.manager.id);
-        html += `
-          <div class="golfer-list-item bb-row ${bbExpanded ? "expanded" : ""}">
-            <div class="golfer-list-main" onclick="toggleBBExpand('${result.manager.id}')">
-              <div class="golfer-list-left">
-                <span class="golfer-name bb-label">Best Ball</span>
-              </div>
-              <div class="golfer-list-right">
-                ${renderRoundChips(result.bestBall.rounds)}
-                <span class="golfer-score ${scoreColorClass(result.bestBall.total)}">${result.bestBall.totalDisplay}</span>
-                <span class="golfer-expand-chevron">${bbExpanded ? "▲" : "▼"}</span>
-              </div>
-            </div>`;
+        html += `<div class="bb-section">`;
+        html += `<div class="golfer-list-item bb-row ${bbExpanded ? "expanded" : ""}">
+          <div class="golfer-list-main" onclick="toggleBBExpand('${result.manager.id}')">
+            <div class="golfer-list-left">
+              <span class="golfer-name bb-label">Team Best Ball</span>
+            </div>
+            <div class="golfer-list-right">
+              <span class="golfer-score ${scoreColorClass(result.bestBall.total)}">${result.bestBall.totalDisplay}</span>
+              <span class="golfer-expand-chevron">${bbExpanded ? "▲" : "▼"}</span>
+            </div>
+          </div>`;
         if (bbExpanded) {
           html += renderScorecard(result.bestBall.rounds, { type: "bestball" });
         }
-        html += `</div>`; // golfer-list-item
+        html += `</div></div>`; // golfer-list-item, bb-section
       }
 
-      html += `</div>`; // golfer-list
       html += `</div></td></tr>`; // detail-panel, td, tr
     }
   }
@@ -447,7 +476,7 @@ function renderRoundChips(rounds) {
 function renderScorecard(rounds, opts) {
   if (!rounds.length) return "";
 
-  let bbContribMap = {};
+  const bbContribMap = {};
   let html = `<div class="hole-breakdown">`;
 
   if (opts.type === "player") {
@@ -462,12 +491,23 @@ function renderScorecard(rounds, opts) {
     }
     const safeGolferName = opts.golferName.replace(/'/g, "\\'");
     const toggleLabel = opts.bbHighlightOn ? "Hide BB Holes" : "Show BB Holes";
-    html += `<div class="hole-breakdown-header">
-      <div class="hole-breakdown-title">${opts.g.name} — Scorecard</div>
+      html += `<div class="hole-breakdown-header">
+    <div class="hole-breakdown-title">${opts.g.name} — Scorecard</div>
+    <div class="hole-breakdown-right">
       <button class="bb-toggle-btn ${opts.bbHighlightOn ? "active" : ""}"
         onclick="event.stopPropagation(); toggleBBHighlight('${opts.managerId}', '${safeGolferName}')"
         title="Highlight holes that contributed to best ball">${toggleLabel}</button>
-    </div>`;
+    </div>
+    </div>
+    ${renderRoundChips(opts.g.rounds)}`;
+  }
+
+  if (opts.type === "bestball") {
+    html += `<div class="hole-breakdown-header">
+      <div class="hole-breakdown-title">Scorecard</div>
+      <div class="hole-breakdown-title bb">Click score to reveal players</div>
+    </div>
+    ${renderRoundChips(rounds)}`;
   }
 
   for (const round of rounds) {
@@ -524,7 +564,7 @@ function renderScorecard(rounds, opts) {
     html += renderTotalCell(frontPlayed || backPlayed, frontStrokes + backStrokes, frontToPar + backToPar);
     html += `</tr>`;
 
-    // BY row (best ball only) — click-to-show tooltip
+    /* // BY row (best ball only) — click-to-show tooltip
     if (opts.type === "bestball") {
       html += `<tr class="sc-by-row"><td class="sc-label-cell sc-by-label">BY</td>`;
       for (const { hData } of front) html += renderByCell(hData);
@@ -534,6 +574,7 @@ function renderScorecard(rounds, opts) {
       html += `<td class="sc-section-total sc-by-cell"></td>`;
       html += `</tr>`;
     }
+    */
 
     html += `</tbody></table></div></div>`; // table, scroll-wrap, scorecard-round
   }
@@ -546,6 +587,12 @@ function renderScorecardCell(hData, type, isBB) {
   if (!hData) return `<td class="sc-score-cell sc-empty">–</td>`;
   const strokes = type === "bestball" ? hData.bestStrokes : hData.strokes;
   const bbClass = isBB ? " sc-bb-hole" : "";
+  if (type === "bestball") {
+    const players = hData.bestPlayers.map(playerInitials).join(" · ");
+    return `<td class="sc-score-cell ${holeColorClass(hData.toPar)} sc-bb-clickable"
+      data-players="${players}"
+      onclick="event.stopPropagation(); showBBPopup(this, '${players}')">${strokes}</td>`;
+  }
   return `<td class="sc-score-cell ${holeColorClass(hData.toPar)}${bbClass}"><span class="sc-stroke">${strokes}</span></td>`;
 }
 
@@ -555,13 +602,6 @@ function renderTotalCell(played, strokes, toPar) {
     <span class="sc-total-strokes">${strokes}</span>
     <span class="sc-total-topar">${formatToPar(toPar)}</span>
   </td>`;
-}
-
-function renderByCell(hData) {
-  if (!hData) return `<td class="sc-by-cell sc-empty-by"></td>`;
-  const initials = hData.bestPlayers.map(playerInitials).join("\u00A0");
-  // Tooltip shown on click via .tip-open class; data-tip holds the text
-  return `<td class="sc-by-cell" data-tip="${initials}" onclick="event.stopPropagation(); toggleTip(this)"></td>`;
 }
 
 function playerInitials(fullName) {
@@ -574,10 +614,15 @@ function playerInitials(fullName) {
 //  UI HELPERS
 // ============================================================
 
+function toggleSet(set, key) {
+  if (set.has(key)) set.delete(key);
+  else set.add(key);
+}
+
 function scoreColorClass(val) {
-  if (val === null || val === undefined) return "";
-  if (val < 0)  return "score-under";
-  if (val === 0) return "score-even";
+  if (val == null) return "";
+  if (val < 0)     return "score-under";
+  if (val === 0)   return "score-even";
   return "score-over";
 }
 
@@ -599,8 +644,7 @@ function setLoading(val) {
 }
 
 function setError(msg) {
-  state.error   = msg;
-  state.loading = false;
+  state.error = msg;
   setLoading(false);
   renderLeaderboard();
 }
@@ -633,29 +677,33 @@ function toggleGolfer(managerId, golferName) {
 }
 
 function toggleBBExpand(managerId) {
-  if (state.expandedBB.has(managerId)) {
-    state.expandedBB.delete(managerId);
-  } else {
-    state.expandedBB.add(managerId);
-  }
+  toggleSet(state.expandedBB, managerId);
   renderLeaderboard();
 }
 
 function toggleBBHighlight(managerId, golferName) {
-  const key = `${managerId}|${golferName}`;
-  if (state.bbHighlight.has(key)) {
-    state.bbHighlight.delete(key);
-  } else {
-    state.bbHighlight.add(key);
-  }
+  toggleSet(state.bbHighlight, `${managerId}|${golferName}`);
   renderLeaderboard();
 }
 
-function toggleTip(cell) {
-  const wasOpen = cell.classList.contains("tip-open");
-  // Close all tooltips
-  document.querySelectorAll(".sc-by-cell.tip-open").forEach(el => el.classList.remove("tip-open"));
-  if (!wasOpen) cell.classList.add("tip-open");
+function showBBPopup(cell, players) {
+  const existing = cell.querySelector(".bb-popup");
+  document.querySelectorAll(".bb-popup").forEach(el => el.remove());
+  if (existing) return;
+
+  const popup = document.createElement("div");
+  popup.className = "bb-popup";
+  popup.textContent = players;
+  cell.style.position = "relative";
+  cell.appendChild(popup);
+
+  // Close on next outside click
+  setTimeout(() => {
+    document.addEventListener("click", function handler() {
+      document.querySelectorAll(".bb-popup").forEach(el => el.remove());
+      document.removeEventListener("click", handler);
+    });
+  }, 0);
 }
 
 function setSortBy(col) {
@@ -674,12 +722,6 @@ async function init() {
   setInterval(fetchScores, REFRESH_MS);
   document.getElementById("refresh-btn")?.addEventListener("click", fetchScores);
 
-  // Close tooltips when clicking outside a BY cell
-  document.addEventListener("click", e => {
-    if (!e.target.classList.contains("sc-by-cell")) {
-      document.querySelectorAll(".sc-by-cell.tip-open").forEach(el => el.classList.remove("tip-open"));
-    }
-  });
 }
 
 document.addEventListener("DOMContentLoaded", init);
@@ -691,5 +733,5 @@ window.toggleManager     = toggleManager;
 window.toggleGolfer      = toggleGolfer;
 window.toggleBBExpand    = toggleBBExpand;
 window.toggleBBHighlight = toggleBBHighlight;
-window.toggleTip         = toggleTip;
+window.showBBPopup       = showBBPopup;
 window.setSortBy         = setSortBy;

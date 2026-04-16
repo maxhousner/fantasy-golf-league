@@ -1,25 +1,25 @@
 /* ============================================================
-   SPGA — Sub-Par Golf Association
-   style.css  |  Dark scoreboard aesthetic
+   SPGA FANTASY — Sub-Par Golf Association Fantasy Golf League
+   style.css
 ============================================================ */
 
 /* ---- Reset & Base ---- */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg:           #0d0f0e;
-  --bg-surface:   #141714;
-  --bg-row:       #181b18;
-  --bg-row-alt:   #161916;
-  --bg-detail:    #111311;
-  --bg-card:      #1c201c;
+  --bg:           #0d0e10;
+  --bg-surface:   #131518;
+  --bg-row:       #171a1d;
 
-  --border:       #2a2e2a;
-  --border-soft:  #222622;
+  --bg-detail:    #101214;
+  --bg-card:      #1a1d22;
+
+  --border:       #282c32;
+  --border-soft:  #20242a;
 
   --text-primary:   #e8ebe6;
-  --text-secondary: #8a9188;
-  --text-muted:     #4e5450;
+  --text-secondary: #888d96;
+  --text-muted:     #4e5258;
 
   --green:       #4ade80;
   --green-dim:   #22543d;
@@ -27,16 +27,16 @@
   --red:         #f87171;
   --red-dim:     #5c1f1f;
   --red-deep:    #1f0a0a;
-  --amber:       #fbbf24;
-  --amber-dim:   #4a3200;
-  --amber-deep:  #1f1200;
+  --amber:      #fbbf24;
+  --amber-deep: #1f1200;
   --purple:      #c084fc;
-  --purple-dim:  #3b1f5c;
   --purple-deep: #1a0a30;
 
-  --gold:     #c9a84c;
+  --gold:   #f0c040;
+  --silver: #d0d4e0;
+  --bronze: #d4895a;
 
-  --accent:    #4ade80;
+  --accent:    #60a5fa;
   --radius:    4px;
   --radius-lg: 8px;
 }
@@ -84,6 +84,7 @@ html, body {
   letter-spacing: 2px;
   line-height: 1;
   white-space: nowrap;
+  margin-top: 4px;
 }
 
 .brand-text { display: flex; flex-direction: column; gap: 1px; }
@@ -240,7 +241,7 @@ html, body {
 .leaderboard-table th {
   padding: 10px 8px;
   font-family: 'DM Mono', monospace;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 500;
   letter-spacing: 0.12em;
   color: var(--text-muted);
@@ -252,8 +253,9 @@ html, body {
 
 .leaderboard-table .th-rank   { width: 44px; text-align: center; }
 /* .leaderboard-table .th-name   { flexible } */
-.leaderboard-table .th-score  { width: 88px; text-align: center; }
+.leaderboard-table .th-score  { width: 100px; text-align: center; }
 .leaderboard-table .th-expand { width: 28px; }
+.leaderboard-table .th-short  { display: none; }
 
 .th-sortable { cursor: pointer; user-select: none; }
 @media (hover: hover) {
@@ -271,7 +273,6 @@ html, body {
   transition: background 0.1s;
 }
 
-.manager-row:nth-child(even) { background: var(--bg-row-alt); }
 
 @media (hover: hover) {
   .manager-row:hover { background: var(--bg-card); }
@@ -288,30 +289,31 @@ html, body {
 }
 
 /* Rank cell */
-.rank-cell {
+.leaderboard-table td.rank-cell {
   text-align: center;
   font-family: 'Bebas Neue', sans-serif;
-  font-size: 20px;
+  font-size: 28px;
   color: var(--text-muted);
   padding-left: 8px;
   padding-right: 4px;
 }
 
-/* Medal colours only for the first 3 ranked rows (not detail rows) */
-.manager-row:nth-child(1) .rank-cell { color: var(--gold); }
-.manager-row:nth-child(2) .rank-cell { color: #a0a0a8; }
-.manager-row:nth-child(3) .rank-cell { color: #a07050; }
+/* Medal colours keyed on data-rank — immune to detail-row siblings shifting nth-child */
+.manager-row[data-rank="1"] .rank-cell { color: var(--gold); }
+.manager-row[data-rank="2"] .rank-cell { color: var(--silver); }
+.manager-row[data-rank="3"] .rank-cell { color: var(--bronze); }
 
 /* Name cell */
-.name-cell {
+.leaderboard-table td.name-cell {
   display: flex;
   flex-direction: column;
+  justify-content: center;
   gap: 2px;
   min-width: 0; /* allow text to truncate inside fixed layout */
 }
 
 .manager-name {
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 500;
   color: var(--text-primary);
   letter-spacing: 0.01em;
@@ -321,7 +323,7 @@ html, body {
 }
 
 .team-name {
-  font-size: 10px;
+  font-size: 14px;
   color: var(--text-muted);
   white-space: nowrap;
   overflow: hidden;
@@ -329,33 +331,23 @@ html, body {
 }
 
 /* Score cells */
-.score-cell { text-align: center; vertical-align: middle; }
+.leaderboard-table td.score-cell { text-align: center; }
 
 .score-primary {
   display: block;
   font-family: 'Bebas Neue', sans-serif;
-  font-size: 22px;
+  font-size: 28px;
   letter-spacing: 1px;
   line-height: 1;
 }
 
-.score-label {
-  display: block;
-  font-size: 9px;
-  font-family: 'DM Mono', monospace;
-  letter-spacing: 0.1em;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  margin-top: 2px;
-}
-
 /* Score colour classes */
-.score-under .score-primary, .score-under { color: var(--green); }
-.score-even  .score-primary, .score-even  { color: var(--text-primary); }
-.score-over  .score-primary, .score-over  { color: var(--red); }
+.score-under { color: var(--green); }
+.score-even  { color: var(--text-primary); }
+.score-over  { color: var(--red); }
 
 /* Expand chevron */
-.expand-cell {
+.leaderboard-table td.expand-cell {
   text-align: center;
   color: var(--text-muted);
   font-size: 11px;
@@ -396,10 +388,8 @@ html, body {
   padding: 14px 14px 20px;
   /* border-top: 1px solid var(--border-soft); */
   /* border-bottom: 1px solid var(--border-soft); */
-  /* Constrain width to the cell, never wider than the viewport */
   width: 100%;
   max-width: 100%;
-  box-sizing: border-box;
 }
 
 .detail-section-label {
@@ -422,21 +412,25 @@ html, body {
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   overflow: hidden;
-  /* Must not exceed available width */
   width: 100%;
-  max-width: 100%;
 }
 
 .golfer-list-item {
-  background: var(--bg-card);
+  background: var(--bg-row);
   border-bottom: 1px solid var(--border-soft);
 }
 
 .golfer-list-item:last-child  { border-bottom: none; }
 .golfer-list-item.cut         { opacity: 0.6; }
 .golfer-list-item.not-found   { opacity: 0.5; }
-.golfer-list-item.expanded    { background: var(--bg-surface); }
-.golfer-list-item.bb-row      { border-top: 1px solid var(--border); }
+.golfer-list-item.expanded    { background: var(--bg-card); }
+
+.bb-section {
+  margin-top: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
 
 .golfer-list-main {
   display: flex;
@@ -445,16 +439,14 @@ html, body {
   padding: 9px 12px;
   cursor: pointer;
   gap: 8px;
-  /* Prevent this row from overflowing */
   min-width: 0;
   width: 100%;
-  box-sizing: border-box;
 }
 
 .golfer-list-main.no-cursor { cursor: default; }
 
 @media (hover: hover) {
-  .golfer-list-main:hover { background: var(--bg-row); }
+  .golfer-list-main:hover { background: var(--bg-card); }
 }
 
 .golfer-list-left {
@@ -489,8 +481,6 @@ html, body {
   text-overflow: ellipsis;
 }
 
-.golfer-name.bb-label { color: var(--text-primary); }
-
 .golfer-position {
   font-size: 11px;
   color: var(--text-muted);
@@ -509,15 +499,14 @@ html, body {
 }
 
 .golfer-score.score-under { color: var(--green); }
-.golfer-score.score-even  { color: var(--text-primary); }
 .golfer-score.score-over  { color: var(--red); }
 
 /* Round chips — nowrap, flex row, never line-break */
 .golfer-rounds {
   display: flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   gap: 4px;
-  flex-shrink: 0;
+  margin-bottom: 10px;
 }
 
 .round-chip {
@@ -549,8 +538,6 @@ html, body {
   flex-shrink: 0;
 }
 
-.wd-badge { background: var(--amber-dim); color: var(--amber); }
-
 /* ============================================================
    HOLE BREAKDOWN (scorecard container)
 ============================================================ */
@@ -559,10 +546,8 @@ html, body {
   background: var(--bg-detail);
   border-top: 1px solid var(--border-soft);
   padding: 12px 12px 14px;
-  /* Must not overflow the list item */
   width: 100%;
   max-width: 100%;
-  box-sizing: border-box;
 }
 
 .hole-breakdown-header {
@@ -579,6 +564,11 @@ html, body {
   font-weight: 500;
   color: var(--text-secondary);
   letter-spacing: 0.04em;
+}
+
+.hole-breakdown-title.bb{
+  font-size: 10px;
+  color: var(--text-muted);
 }
 
 /* BB highlight toggle */
@@ -624,17 +614,13 @@ html, body {
 .scorecard-scroll-wrap {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
-  /* Fill available width but scroll internally */
   width: 100%;
-  max-width: 100%;
 }
 
 .scorecard-table {
   border-collapse: collapse;
-  /* Fixed minimum so all 18 holes + totals render properly;
-     on desktop with room it expands to fill via width:100% on parent */
   min-width: 520px;
-  width: max-content;
+  width: 100%;
 }
 
 /* All cells share these base styles */
@@ -647,35 +633,35 @@ html, body {
 }
 
 /* Label column (HOLE / PAR / SCORE / BY) */
-.sc-label-cell {
+.scorecard-table th.sc-label-cell,
+.scorecard-table td.sc-label-cell {
   font-family: 'DM Mono', monospace;
   font-size: 9px;
   letter-spacing: 0.08em;
-  color: var(--text-muted);
+  color: var(--text-secondary);
   text-transform: uppercase;
-  padding: 3px 6px 3px 2px;
-  text-align: left;
+  padding: 3px 2px;
   white-space: nowrap;
   width: 46px;
   min-width: 46px;
 }
 
 /* Hole number header */
-.sc-hole-header {
+.scorecard-table th.sc-hole-header {
   font-family: 'DM Mono', monospace;
-  font-size: 10px;
-  color: var(--text-muted);
+  font-size: 9px;
+  color: var(--text-secondary);
   padding: 3px 2px;
   background: var(--bg-row);
   border-bottom: 1px solid var(--border-soft);
 }
 
 /* OUT / IN / TOT column */
-.sc-section-total {
+.scorecard-table th.sc-section-total,
+.scorecard-table td.sc-section-total {
   font-family: 'DM Mono', monospace;
   font-size: 9px;
-  font-weight: 500;
-  color: var(--text-secondary);
+  letter-spacing: 0.08em;
   background: var(--bg-row);
   border-left: 1px solid var(--border);
   border-right: 1px solid var(--border);
@@ -683,6 +669,11 @@ html, body {
   white-space: nowrap;
   width: 36px;
   min-width: 36px;
+}
+
+/* Color only for header — data cells use score color classes */
+.scorecard-table th.sc-section-total {
+  color: var(--text-secondary);
 }
 
 /* Header row totals share the hole-header bottom border */
@@ -715,8 +706,8 @@ html, body {
 .sc-score-cell.hole-eagle  { background: var(--purple-deep); color: var(--purple); }
 .sc-score-cell.hole-birdie { background: var(--green-deep);  color: var(--green);  }
 .sc-score-cell.hole-par    { background: var(--bg-card);     color: var(--text-primary); }
-.sc-score-cell.hole-bogey  { background: var(--amber-deep);  color: var(--amber);  }
-.sc-score-cell.hole-double { background: var(--red-deep);    color: var(--red);    }
+.sc-score-cell.hole-bogey  { background: var(--red-deep);  color: var(--red);  }
+.sc-score-cell.hole-double { background: var(--amber-deep);    color: var(--amber);    }
 
 /* BB highlight outline on player scorecard */
 .sc-bb-hole {
@@ -725,9 +716,6 @@ html, body {
   position: relative;
   z-index: 1;
 }
-
-/* Section total score cells */
-.sc-section-total.sc-score-cell { vertical-align: middle; }
 
 .sc-total-strokes {
   display: block;
@@ -744,39 +732,26 @@ html, body {
   margin-top: 1px;
 }
 
-/* BY row — click-to-reveal tooltip */
-.sc-by-row td { padding: 0; }
-
-.sc-by-label {
-  font-family: 'DM Mono', monospace;
-  font-size: 9px;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  text-align: left;
-  padding: 3px 6px 3px 2px;
-}
-
-.sc-by-cell {
-  font-family: 'DM Mono', monospace;
-  font-size: 9px;
-  color: transparent; /* Initials hidden by default */
+.sc-bb-clickable {
   cursor: pointer;
-  padding: 3px 2px;
-  border-top: 1px solid var(--border-soft);
-  position: relative;
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-  user-select: none;
 }
 
-.sc-by-cell:not(.sc-empty-by):hover,
-.sc-by-cell.tip-open {
-  color: var(--text-muted);
-  background: var(--bg-row);
+.bb-popup {
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 4px 8px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  z-index: 50;
+  pointer-events: none;
 }
-
-.sc-empty-by { cursor: default; }
 
 /* ============================================================
    FOOTER
@@ -802,7 +777,7 @@ html, body {
 ============================================================ */
 
 @media (max-width: 720px) {
-  .brand-full, .brand-season { display: none; }
+  .brand-full, .brand-season { display: none; }  
 }
 
 @media (max-width: 640px) {
@@ -814,18 +789,26 @@ html, body {
 
   .leaderboard-wrap { padding: 0 10px; margin-top: 14px; }
 
-  /* Tighten up leaderboard columns on mobile */
-  .leaderboard-table .th-rank  { width: 36px; }
-  .leaderboard-table .th-score { width: 72px; }
+  /* Score columns — wide enough for short labels (COMB / BB) */
+  .leaderboard-table th         { font-size: 10px; }
+  .leaderboard-table .th-rank   { width: 36px; }
   .leaderboard-table .th-expand { width: 22px; }
+  .leaderboard-table .th-score  { width: 64px; }
+  .leaderboard-table .th-long   { display: none; }
+  .leaderboard-table .th-short  { display: inline; }
 
-  /* .leaderboard-table td { padding: 10px 8px; } */
-  .rank-cell  { font-size: 18px; }
-  .score-primary { font-size: 18px; }
-  .score-label   { display: none; } /* too cramped on small screens */
-  .manager-name  { font-size: 13px; }
+  .leaderboard-table td             { padding: 10px 8px; }
+  .leaderboard-table td.rank-cell     { font-size: 24px; }
+  .leaderboard-table td.score-cell    { padding: 10px 4px; }
+  .leaderboard-table td.expand-cell   { padding: 0 4px; }
+  .leaderboard-table td.name-cell     { gap: 0px; }
+  
+  .score-primary { font-size: 24px; }
 
-  .banner-inner   { padding: 10px 12px; gap: 10px; }
-  .tourney-tab    { font-size: 11px; padding: 5px 8px; }
-  .detail-panel   { padding: 10px 10px 16px; }
+  .manager-name { font-size: 14px; }
+  .team-name    { font-size: 11px; }
+
+  .banner-inner { padding: 10px 12px; gap: 10px; }
+  .tourney-tab  { font-size: 11px; padding: 5px 8px; }
+  .detail-panel { padding: 10px 10px 16px; }
 }

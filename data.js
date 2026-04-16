@@ -1,14 +1,14 @@
-// ============================================================
-//  SPGA — Sub-Par Golf Association
-//  data.js  |  Edit this file to manage the league
-// ============================================================
+/* ============================================================
+   SPGA FANTASY — Sub-Par Golf Association Fantasy Golf League
+   data.js
+============================================================ */
 
 // ============================================================
 //  ACTIVE TOURNAMENT
 //  Options: "the_masters" | "pga_championship" | "us_open" | "the_open"
 // ============================================================
 
-let ACTIVE_TOURNAMENT = "the_masters";
+let ACTIVE_TOURNAMENT = "pga_championship";
 
 // ============================================================
 //  LEAGUE SETTINGS
@@ -42,7 +42,7 @@ const TOURNAMENTS = {
     shortName: "PGA Champ",
     espnEventId: "401811947",
     location: "Aronimink Golf Club, Newtown Square, PA",
-    startDate: "20260414", // modified just for testing
+    startDate: "20260514", // modified just for testing
     endDate:   "20260517",
   },
   us_open: {
@@ -73,7 +73,7 @@ const MANAGERS = [
   {
     id: "manager_1",
     name: "Max",
-    teamName: "Bunker? I Barely Know Her",
+    teamName: "[TEAM NAME]",
     golfers: {
       the_masters: [
         "Scottie Scheffler",
@@ -82,13 +82,7 @@ const MANAGERS = [
         "Ben Griffin",
         "Akshay Bhatia",
       ],
-      pga_championship: [
-        "Scottie Scheffler",
-        "Rory McIlroy",
-        "Xander Schauffele",
-        "Collin Morikawa",
-        "Tommy Fleetwood",
-      ],
+      pga_championship: [],
       us_open: [],
       the_open: [],
     },
@@ -96,7 +90,7 @@ const MANAGERS = [
   {
     id: "manager_2",
     name: "Bennett",
-    teamName: "BENNETT'S BOYS",
+    teamName: "[TEAM NAME]",
     golfers: {
       the_masters: [
         "Scottie Scheffler",
@@ -105,13 +99,7 @@ const MANAGERS = [
         "Ben Griffin",
         "Justin Rose",
       ],
-      pga_championship: [
-        "Jon Rahm",
-        "Ludvig Åberg",
-        "Viktor Hovland",
-        "Tyrrell Hatton",
-        "Matt Fitzpatrick",
-      ],
+      pga_championship: [],
       us_open: [],
       the_open: [],
     },
@@ -119,7 +107,7 @@ const MANAGERS = [
   {
     id: "manager_3",
     name: "Paul",
-    teamName: "I'm Brandon!",
+    teamName: "[TEAM NAME]",
     golfers: {
       the_masters: [
         "Scottie Scheffler",
@@ -136,7 +124,7 @@ const MANAGERS = [
   {
     id: "manager_4",
     name: "Rehan",
-    teamName: "re-birdie",
+    teamName: "[TEAM NAME]",
     golfers: {
       the_masters: [
         "Bubba Watson",
@@ -153,7 +141,7 @@ const MANAGERS = [
   {
     id: "manager_5",
     name: "Alex",
-    teamName: "[team name]",
+    teamName: "[TEAM NAME]",
     golfers: {
       the_masters: [],
       pga_championship: [],
@@ -164,7 +152,7 @@ const MANAGERS = [
   {
     id: "manager_6",
     name: "Will",
-    teamName: "[team name]",
+    teamName: "[TEAM NAME]",
     golfers: {
       the_masters: [],
       pga_championship: [],
