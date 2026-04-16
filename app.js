@@ -74,6 +74,7 @@ async function fetchScores() {
   if (tState === "pre") {
     state.playerScores = {};
     state.leaderboard  = computeLeaderboard();
+    state.lastUpdated  = new Date();
     state.error        = null;
     render();
     return;
