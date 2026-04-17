@@ -8,7 +8,7 @@
 //  Options: "the_masters" | "pga_championship" | "us_open" | "the_open"
 // ============================================================
 
-let ACTIVE_TOURNAMENT = "pga_championship";
+let ACTIVE_TOURNAMENT = "the_masters";
 
 // ============================================================
 //  LEAGUE SETTINGS

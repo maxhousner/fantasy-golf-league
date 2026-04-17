@@ -115,13 +115,8 @@ html, body {
 .loading-dot {
   color: var(--accent);
   font-size: 10px;
-  visibility: hidden; /* JS sets visibility:visible when loading */
-  animation: pulse 1s ease-in-out infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.3; }
+  opacity: 0;
+  transition: opacity 1s ease;
 }
 
 .refresh-btn {
@@ -148,6 +143,7 @@ html, body {
   .refresh-btn:hover { border-color: var(--accent); color: var(--accent); }
 }
 
+.refresh-btn:active { border-color: var(--accent); color: var(--accent); }
 .refresh-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
 /* ============================================================
@@ -511,7 +507,7 @@ html, body {
 
 .round-chip {
   font-family: 'DM Mono', monospace;
-  font-size: 10px;
+  font-size: 12px;
   padding: 2px 5px;
   border-radius: 2px;
   background: var(--bg-surface);
@@ -560,8 +556,8 @@ html, body {
 }
 
 .hole-breakdown-title {
+  font-family: 'DM Mono', monospace;
   font-size: 12px;
-  font-weight: 500;
   color: var(--text-secondary);
   letter-spacing: 0.04em;
 }
@@ -602,8 +598,8 @@ html, body {
 
 .scorecard-round-label {
   font-family: 'DM Mono', monospace;
-  font-size: 11px;
-  color: var(--text-muted);
+  font-size: 12px;
+  color: var(--text-secondary);
   margin-bottom: 5px;
   display: flex;
   gap: 5px;
@@ -619,83 +615,80 @@ html, body {
 
 .scorecard-table {
   border-collapse: collapse;
+  table-layout: fixed;
+  border: 1px solid var(--border);
   min-width: 520px;
   width: 100%;
 }
 
-/* All cells share these base styles */
+/* All cells: base defaults inherited by all rows */
 .scorecard-table th,
 .scorecard-table td {
   text-align: center;
-  padding: 0;
+  vertical-align: middle;
+  line-height: 1;
+  letter-spacing: 0;
+  padding: 2px 2px;
   width: 28px;
   min-width: 28px;
 }
 
-/* Label column (HOLE / PAR / SCORE / BY) */
+/* Header row background */
+.scorecard-table thead tr {
+  background: var(--bg-row);
+}
+
+/* Label column (HOLE / PAR / SCORE) */
 .scorecard-table th.sc-label-cell,
 .scorecard-table td.sc-label-cell {
   font-family: 'DM Mono', monospace;
-  font-size: 9px;
-  letter-spacing: 0.08em;
+  font-size: 10px;
   color: var(--text-secondary);
   text-transform: uppercase;
-  padding: 3px 2px;
   white-space: nowrap;
   width: 46px;
   min-width: 46px;
+  border-right: 1px solid var(--border);
 }
 
 /* Hole number header */
 .scorecard-table th.sc-hole-header {
   font-family: 'DM Mono', monospace;
-  font-size: 9px;
+  font-size: 10px;
   color: var(--text-secondary);
-  padding: 3px 2px;
-  background: var(--bg-row);
-  border-bottom: 1px solid var(--border-soft);
+  border-bottom: 1px solid var(--border);
 }
 
-/* OUT / IN / TOT column */
+/* OUT / IN / TOT columns */
 .scorecard-table th.sc-section-total,
 .scorecard-table td.sc-section-total {
   font-family: 'DM Mono', monospace;
-  font-size: 9px;
-  letter-spacing: 0.08em;
+  font-size: 10px;
   background: var(--bg-row);
   border-left: 1px solid var(--border);
   border-right: 1px solid var(--border);
-  padding: 3px 4px;
+  padding: 2px 4px;
   white-space: nowrap;
   width: 36px;
   min-width: 36px;
 }
 
-/* Color only for header — data cells use score color classes */
-.scorecard-table th.sc-section-total {
-  color: var(--text-secondary);
-}
-
-/* Header row totals share the hole-header bottom border */
-.sc-header-total {
-  border-bottom: 1px solid var(--border-soft);
-}
+.scorecard-table th.sc-section-total { color: var(--text-secondary); }
+.sc-header-total { border-bottom: 1px solid var(--border); }
 
 /* Par row */
 .sc-par-cell {
   font-family: 'DM Mono', monospace;
   font-size: 10px;
   color: var(--text-muted);
-  padding: 3px 2px;
-  border-bottom: 1px solid var(--border-soft);
+  border-bottom: 1px solid var(--border);
 }
 
 /* Score cells */
 .sc-score-cell {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: 15px;
-  padding: 4px 2px;
-  vertical-align: middle;
+  font-size: 18px;
+  padding: 3px 2px;
 }
 
 .sc-stroke { display: block; line-height: 1; }
@@ -710,7 +703,8 @@ html, body {
 .sc-score-cell.hole-double { background: var(--amber-deep);    color: var(--amber);    }
 
 /* BB highlight outline on player scorecard */
-.sc-bb-hole {
+.sc-bb-hole,
+.sc-bb-active {
   outline: 1px solid var(--green-dim);
   outline-offset: -2px;
   position: relative;
@@ -720,14 +714,14 @@ html, body {
 .sc-total-strokes {
   display: block;
   font-family: 'Bebas Neue', sans-serif;
-  font-size: 15px;
+  font-size: 17px;
   line-height: 1;
 }
 
 .sc-total-topar {
   display: block;
   font-family: 'DM Mono', monospace;
-  font-size: 9px;
+  font-size: 10px;
   line-height: 1.2;
   margin-top: 1px;
 }

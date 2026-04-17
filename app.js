@@ -144,12 +144,12 @@ function parseESPN(data) {
   const cut     = playerList.filter(p =>  p.missedCut).sort(byScore);
 
   assignPositions(active, 1);
-  assignPositions(cut, active.length + 1);
 
-  for (const group of [active, cut]) {
-    for (const player of group) {
-      scores[player.name] = { name: player.name, position: player.position ?? "--", missedCut: player.missedCut, overallToPar: player.overallToPar, overallToParDisplay: player.overallToParDisplay, rounds: player.rounds };
-    }
+  for (const player of active) {
+    scores[player.name] = { name: player.name, position: player.position ?? "--", missedCut: player.missedCut, overallToPar: player.overallToPar, overallToParDisplay: player.overallToParDisplay, rounds: player.rounds };
+  }
+  for (const player of cut) {
+    scores[player.name] = { name: player.name, position: "--", missedCut: player.missedCut, overallToPar: player.overallToPar, overallToParDisplay: player.overallToParDisplay, rounds: player.rounds };
   }
   return scores;
 }
@@ -529,7 +529,7 @@ function renderScorecard(rounds, opts) {
     const frontToPar = frontStrokes - frontPar, backToPar = backStrokes - backPar;
 
     html += `<div class="scorecard-round">`;
-    html += `<div class="scorecard-round-label">Round ${round.roundNum}: ${round.totalStrokes} <span class="${scoreColorClass(round.toPar)}">${round.toParDisplay}</span></div>`;
+    html += `<div class="scorecard-round-label">Round ${round.roundNum}: ${round.totalStrokes} / <span class="${scoreColorClass(round.toPar)}">${round.toParDisplay}</span></div>`;
     html += `<div class="scorecard-scroll-wrap"><table class="scorecard-table">`;
 
     // HOLE header row
@@ -639,9 +639,11 @@ function setLoading(val) {
   state.loading = val;
   const btn = document.getElementById("refresh-btn");
   if (btn) btn.disabled = val;
-  // visibility:hidden preserves space, display:none would cause layout shift
   const ind = document.getElementById("loading-indicator");
-  if (ind) ind.style.visibility = val ? "visible" : "hidden";
+  if (ind) {
+    ind.style.transition = val ? "opacity 0.1s ease" : "opacity 1s ease";
+    ind.style.opacity = val ? "1" : "0";
+  }
 }
 
 function setError(msg) {
@@ -690,18 +692,21 @@ function toggleBBHighlight(managerId, golferName) {
 function showBBPopup(cell, players) {
   const existing = cell.querySelector(".bb-popup");
   document.querySelectorAll(".bb-popup").forEach(el => el.remove());
+  document.querySelectorAll(".sc-bb-active").forEach(el => el.classList.remove("sc-bb-active"));
   if (existing) return;
 
   const popup = document.createElement("div");
   popup.className = "bb-popup";
   popup.textContent = players;
   cell.style.position = "relative";
+  cell.classList.add("sc-bb-active");
   cell.appendChild(popup);
 
   // Close on next outside click
   setTimeout(() => {
     document.addEventListener("click", function handler() {
       document.querySelectorAll(".bb-popup").forEach(el => el.remove());
+      document.querySelectorAll(".sc-bb-active").forEach(el => el.classList.remove("sc-bb-active"));
       document.removeEventListener("click", handler);
     });
   }, 0);
