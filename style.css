@@ -368,8 +368,6 @@ html, body {
 
 /* ============================================================
    DETAIL PANEL
-   The detail-row td must NOT clip its children — overflow visible.
-   Scorecards inside scroll independently.
 ============================================================ */
 
 .detail-row td {
@@ -382,8 +380,6 @@ html, body {
 
 .detail-panel {
   padding: 14px 14px 20px;
-  /* border-top: 1px solid var(--border-soft); */
-  /* border-bottom: 1px solid var(--border-soft); */
   width: 100%;
   max-width: 100%;
 }
@@ -487,7 +483,7 @@ html, body {
 
 .golfer-score {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: 20px;
+  font-size: 22px;
   letter-spacing: 1px;
   line-height: 1;
   color: var(--text-primary);
@@ -502,12 +498,11 @@ html, body {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
-  margin-bottom: 10px;
 }
 
 .round-chip {
   font-family: 'DM Mono', monospace;
-  font-size: 12px;
+  font-size: 11px;
   padding: 2px 5px;
   border-radius: 2px;
   background: var(--bg-surface);
@@ -546,25 +541,19 @@ html, body {
   max-width: 100%;
 }
 
-.hole-breakdown-header {
+.hole-breakdown-top-row {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 10px;
-  flex-wrap: wrap;
-  gap: 8px;
+  margin-bottom: 5px;
 }
 
-.hole-breakdown-title {
+.hole-breakdown-title.bb {
   font-family: 'DM Mono', monospace;
-  font-size: 12px;
-  color: var(--text-secondary);
-  letter-spacing: 0.04em;
-}
-
-.hole-breakdown-title.bb{
   font-size: 10px;
   color: var(--text-muted);
+  letter-spacing: 0.04em;
 }
 
 /* BB highlight toggle */
@@ -598,7 +587,7 @@ html, body {
 
 .scorecard-round-label {
   font-family: 'DM Mono', monospace;
-  font-size: 12px;
+  font-size: 11px;
   color: var(--text-secondary);
   margin-bottom: 5px;
   display: flex;
@@ -806,4 +795,10 @@ html, body {
   .tourney-tab  { font-size: 11px; padding: 5px 8px; }
   .tournament-loc, .tournament-dates { font-size: 12px; }
   .detail-panel { padding: 10px 10px 16px; }
+
+  .scorecard-table th,
+  .scorecard-table td { padding: 2px 2px; }
+  .scorecard-table td.sc-score-cell { padding: 3px 2px; }
+  .scorecard-table th.sc-section-total,
+  .scorecard-table td.sc-section-total { padding: 2px 4px; }
 }

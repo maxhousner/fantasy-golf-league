@@ -492,23 +492,19 @@ function renderScorecard(rounds, opts) {
     }
     const safeGolferName = opts.golferName.replace(/'/g, "\\'");
     const toggleLabel = opts.bbHighlightOn ? "Hide BB Holes" : "Show BB Holes";
-      html += `<div class="hole-breakdown-header">
-    <div class="hole-breakdown-title">${opts.g.name} — Scorecard</div>
-    <div class="hole-breakdown-right">
+    html += `<div class="hole-breakdown-top-row">
+      ${renderRoundChips(opts.g.rounds)}
       <button class="bb-toggle-btn ${opts.bbHighlightOn ? "active" : ""}"
         onclick="event.stopPropagation(); toggleBBHighlight('${opts.managerId}', '${safeGolferName}')"
         title="Highlight holes that contributed to best ball">${toggleLabel}</button>
-    </div>
-    </div>
-    ${renderRoundChips(opts.g.rounds)}`;
+    </div>`;
   }
 
   if (opts.type === "bestball") {
-    html += `<div class="hole-breakdown-header">
-      <div class="hole-breakdown-title">Scorecard</div>
+    html += `<div class="hole-breakdown-top-row">
+      ${renderRoundChips(rounds)}
       <div class="hole-breakdown-title bb">Click score to reveal players</div>
-    </div>
-    ${renderRoundChips(rounds)}`;
+    </div>`;
   }
 
   for (const round of rounds) {
