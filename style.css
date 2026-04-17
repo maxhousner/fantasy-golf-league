@@ -181,7 +181,7 @@ html, body {
 
 .tournament-loc,
 .tournament-dates {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-muted);
   letter-spacing: 0.02em;
 }
@@ -197,7 +197,7 @@ html, body {
   border-radius: var(--radius);
   color: var(--text-muted);
   font-family: 'DM Sans', sans-serif;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
   letter-spacing: 0.03em;
@@ -294,7 +294,7 @@ html, body {
   font-family: 'Bebas Neue', sans-serif;
   font-size: 28px;
   color: var(--text-muted);
-  padding-left: 8px;
+  padding-left: 4px;
   padding-right: 4px;
 }
 
@@ -810,5 +810,6 @@ html, body {
 
   .banner-inner { padding: 10px 12px; gap: 10px; }
   .tourney-tab  { font-size: 11px; padding: 5px 8px; }
+  .tournament-loc, .tournament-dates { font-size: 12px; }
   .detail-panel { padding: 10px 10px 16px; }
 }
