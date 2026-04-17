@@ -194,7 +194,9 @@ function parseToParValue(str) {
 function inferMissedCut(comp) {
   const ls = comp.linescores ?? [];
   const withHoles = ls.filter(r => r.linescores?.length > 0 && !(r.displayValue === "-" && r.value === 0));
-  return withHoles.length === 2 && ls.length >= 3 && (ls[2]?.linescores?.length ?? 0) === 0;
+  if (withHoles.length !== 2) return false;
+  const r3 = ls.find(r => r.period === 3);
+  return r3 !== undefined && "value" in r3 && (r3.linescores?.length ?? 0) === 0;
 }
 
 // ============================================================
@@ -850,14 +852,15 @@ function renderPointsBreakdown(pts) {
 
   if (finishPoints.points !== 0)
     add(`Finish Position (${finishPoints.position})`, finishPoints.points);
+
   if (bonusPoints.birdieStreaks !== 0)
-    add(`Birdie Streak ×${bonusCounts.birdieStreaks}`, bonusPoints.birdieStreaks);
+    add(`Birdie Streak (${bonusCounts.birdieStreaks})`, bonusPoints.birdieStreaks);
   if (bonusPoints.bogeyFreeRounds !== 0)
-    add(`Bogey-Free Round ×${bonusCounts.bogeyFreeRounds}`, bonusPoints.bogeyFreeRounds);
+    add(`Bogey-Free Round (${bonusCounts.bogeyFreeRounds})`, bonusPoints.bogeyFreeRounds);
   if (bonusPoints.allUnder70 !== 0)
     add("All Rounds Under 70", bonusPoints.allUnder70);
   if (bonusPoints.holeInOne !== 0)
-    add(`Hole in One ×${bonusCounts.holeInOne}`, bonusPoints.holeInOne);
+    add(`Hole in One (${bonusCounts.holeInOne})`, bonusPoints.holeInOne);
 
   const rowsHtml = rows.map(r => `
     <tr>

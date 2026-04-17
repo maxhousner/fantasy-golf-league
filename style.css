@@ -249,7 +249,7 @@ html, body {
 
 .leaderboard-table .th-rank   { width: 44px; text-align: center; }
 /* .leaderboard-table .th-name   { flexible } */
-.leaderboard-table .th-pts    { width: 80px; text-align: center; }
+.leaderboard-table .th-pts    { width: 100px; text-align: center; }
 .leaderboard-table .th-score  { width: 100px; text-align: center; }
 .leaderboard-table .th-expand { width: 28px; }
 .leaderboard-table .th-short  { display: none; }
@@ -435,7 +435,7 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 9px 12px;
+  padding: 9px 6px 9px 12px;
   cursor: pointer;
   gap: 8px;
   min-width: 0;
@@ -856,7 +856,7 @@ html, body {
   .leaderboard-table th         { font-size: 10px; padding: 10px 4px; }
   .leaderboard-table .th-rank   { width: 36px; }
   .leaderboard-table .th-pts    { width: 56px; }
-  .leaderboard-table .th-expand { width: 22px; }
+  /* .leaderboard-table .th-expand { width: 30px; } */
   .leaderboard-table .th-score  { width: 56px; }
   .leaderboard-table .th-long   { display: none; }
   .leaderboard-table .th-short  { display: inline; }
@@ -865,7 +865,7 @@ html, body {
   .leaderboard-table td.rank-cell     { font-size: 24px; }
   .leaderboard-table td.pts-cell      { padding: 10px 4px; font-size: 24px; }
   .leaderboard-table td.score-cell    { padding: 10px 4px; }
-  .leaderboard-table td.expand-cell   { padding: 0 4px; }
+  .leaderboard-table td.expand-cell   { padding: 0 4px 0 6px; }
   .leaderboard-table td.name-cell     { gap: 0px; }
 
   .score-primary { font-size: 24px; }

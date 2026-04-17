@@ -8,7 +8,7 @@
 //  Options: "the_masters" | "pga_championship" | "us_open" | "the_open"
 // ============================================================
 
-let ACTIVE_TOURNAMENT = "the_masters";
+let ACTIVE_TOURNAMENT = "pga_championship";
 
 // ============================================================
 //  LEAGUE SETTINGS
@@ -28,36 +28,36 @@ const LEAGUE_SETTINGS = {
 const POINTS_CONFIG = {
   perHole: {
     doubleEagle: 20,
-    eagle:        8,
-    birdie:       3,
-    par:          0.5,
-    bogey:       -0.5,
-    double:      -1,
-    worse:       -1,
+    eagle: 8,
+    birdie: 3,
+    par: 0.5,
+    bogey: -0.5,
+    double: -1,
+    worse: -1,
   },
   finishPosition: [
-    { min:  1, max:  1, pts: 30 },
-    { min:  2, max:  2, pts: 20 },
-    { min:  3, max:  3, pts: 18 },
-    { min:  4, max:  4, pts: 16 },
-    { min:  5, max:  5, pts: 14 },
-    { min:  6, max:  6, pts: 12 },
-    { min:  7, max:  7, pts: 10 },
-    { min:  8, max:  8, pts:  9 },
-    { min:  9, max:  9, pts:  8 },
-    { min: 10, max: 10, pts:  7 },
-    { min: 11, max: 15, pts:  6 },
-    { min: 16, max: 20, pts:  5 },
-    { min: 21, max: 25, pts:  4 },
-    { min: 26, max: 30, pts:  3 },
-    { min: 31, max: 40, pts:  2 },
-    { min: 41, max: 50, pts:  1 },
+    { min: 1, max: 1, pts: 30 },
+    { min: 2, max: 2, pts: 20 },
+    { min: 3, max: 3, pts: 18 },
+    { min: 4, max: 4, pts: 16 },
+    { min: 5, max: 5, pts: 14 },
+    { min: 6, max: 6, pts: 12 },
+    { min: 7, max: 7, pts: 10 },
+    { min: 8, max: 8, pts: 9 },
+    { min: 9, max: 9, pts: 8 },
+    { min: 10, max: 10, pts: 7 },
+    { min: 11, max: 15, pts: 6 },
+    { min: 16, max: 20, pts: 5 },
+    { min: 21, max: 25, pts: 4 },
+    { min: 26, max: 30, pts: 3 },
+    { min: 31, max: 40, pts: 2 },
+    { min: 41, max: 50, pts: 1 },
   ],
   bonuses: {
-    birdieStreak:   3,
+    birdieStreak: 3,
     bogeyFreeRound: 3,
-    allUnder70:     5,
-    holeInOne:     10,
+    allUnder70: 5,
+    holeInOne: 10,
   },
 };
 
@@ -75,15 +75,15 @@ const TOURNAMENTS = {
     espnEventId: "401811941",
     location: "Augusta National Golf Club, Augusta, GA",
     startDate: "20260409",
-    endDate:   "20260412",
+    endDate: "20260412",
   },
   pga_championship: {
     name: "PGA Championship",
     shortName: "PGA Champ",
     espnEventId: "401811947",
     location: "Aronimink Golf Club, Newtown Square, PA",
-    startDate: "20260514", // modified just for testing
-    endDate:   "20260517",
+    startDate: "20260414", // modified just for testing
+    endDate: "20260517",
   },
   us_open: {
     name: "U.S. Open",
@@ -91,7 +91,7 @@ const TOURNAMENTS = {
     espnEventId: "401811952",
     location: "Shinnecock Hills Golf Club, Southampton, NY",
     startDate: "20260618",
-    endDate:   "20260621",
+    endDate: "20260621",
   },
   the_open: {
     name: "The Open Championship",
@@ -99,7 +99,7 @@ const TOURNAMENTS = {
     espnEventId: "401811957",
     location: "Royal Birkdale Golf Club, Southport, England",
     startDate: "20260716",
-    endDate:   "20260719",
+    endDate: "20260719",
   },
 };
 
@@ -122,7 +122,11 @@ const MANAGERS = [
         "Ben Griffin",
         "Akshay Bhatia",
       ],
-      pga_championship: [],
+      pga_championship: [
+        "Matt Fitzpatrick",
+        "Patrick Cantlay",
+        "Kurt Kitayama",
+      ],
       us_open: [],
       the_open: [],
     },
@@ -139,7 +143,11 @@ const MANAGERS = [
         "Ben Griffin",
         "Justin Rose",
       ],
-      pga_championship: [],
+      pga_championship: [
+        "Viktor Hovland",
+        "Sepp Straka",
+        "Aldrich Potgieter",
+      ],
       us_open: [],
       the_open: [],
     },
@@ -156,7 +164,11 @@ const MANAGERS = [
         "Chris Gotterup",
         "Ludvig Åberg",
       ],
-      pga_championship: [],
+      pga_championship: [
+        "Harris English",
+        "Ludvig Åberg",
+        "Keegan Bradley",
+      ],
       us_open: [],
       the_open: [],
     },
@@ -207,8 +219,8 @@ const MANAGERS = [
 // ============================================================
 
 const DRAFT_LOG = {
-  the_masters:      { round_1: [], round_2: [], round_3: [], round_4: [], round_5: [] },
+  the_masters: { round_1: [], round_2: [], round_3: [], round_4: [], round_5: [] },
   pga_championship: { round_1: [], round_2: [], round_3: [], round_4: [], round_5: [] },
-  us_open:          { round_1: [], round_2: [], round_3: [], round_4: [], round_5: [] },
-  the_open:         { round_1: [], round_2: [], round_3: [], round_4: [], round_5: [] },
+  us_open: { round_1: [], round_2: [], round_3: [], round_4: [], round_5: [] },
+  the_open: { round_1: [], round_2: [], round_3: [], round_4: [], round_5: [] },
 };
