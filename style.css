@@ -583,7 +583,7 @@ html, body {
   background: transparent;
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  color: var(--text-muted);
+  color: var(--text-secondary);
   font-family: 'DM Mono', monospace;
   font-size: 9px;
   letter-spacing: 0.06em;
@@ -604,7 +604,7 @@ html, body {
   background: transparent;
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  color: var(--text-muted);
+  color: var(--text-secondary);
   font-family: 'DM Mono', monospace;
   font-size: 9px;
   letter-spacing: 0.06em;
@@ -752,6 +752,7 @@ html, body {
   color: var(--text-muted);
   border-bottom: 1px solid var(--border);
 }
+.sc-section-total.sc-par-cell { color: var(--text-secondary); }
 
 /* Score cells */
 .sc-score-cell {

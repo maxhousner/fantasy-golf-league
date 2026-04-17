@@ -605,7 +605,7 @@ function renderScorecard(rounds, opts) {
     const safeGolferName = opts.golferName.replace(/'/g, "\\'");
     const isPointsExpanded = state.expandedPoints.has(`${opts.managerId}|${opts.golferName}`);
     const bbLabel  = opts.bbHighlightOn  ? "Hide BB Holes" : "Show BB Holes";
-    const ptsLabel = isPointsExpanded    ? "Hide Points" : "Show Points";
+    const ptsLabel = isPointsExpanded    ? "Hide Points Breakdown" : "Show Points Breakdown";
     html += `${renderRoundChips(opts.g.rounds)}
     <div class="scorecard-btn-row">
       <button class="pts-toggle-btn ${isPointsExpanded ? "active" : ""}"
