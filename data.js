@@ -22,6 +22,46 @@ const LEAGUE_SETTINGS = {
 };
 
 // ============================================================
+//  POINTS CONFIG
+// ============================================================
+
+const POINTS_CONFIG = {
+  perHole: {
+    doubleEagle: 20,
+    eagle:        8,
+    birdie:       3,
+    par:          0.5,
+    bogey:       -0.5,
+    double:      -1,
+    worse:       -1,
+  },
+  finishPosition: [
+    { min:  1, max:  1, pts: 30 },
+    { min:  2, max:  2, pts: 20 },
+    { min:  3, max:  3, pts: 18 },
+    { min:  4, max:  4, pts: 16 },
+    { min:  5, max:  5, pts: 14 },
+    { min:  6, max:  6, pts: 12 },
+    { min:  7, max:  7, pts: 10 },
+    { min:  8, max:  8, pts:  9 },
+    { min:  9, max:  9, pts:  8 },
+    { min: 10, max: 10, pts:  7 },
+    { min: 11, max: 15, pts:  6 },
+    { min: 16, max: 20, pts:  5 },
+    { min: 21, max: 25, pts:  4 },
+    { min: 26, max: 30, pts:  3 },
+    { min: 31, max: 40, pts:  2 },
+    { min: 41, max: 50, pts:  1 },
+  ],
+  bonuses: {
+    birdieStreak:   3,
+    bogeyFreeRound: 3,
+    allUnder70:     5,
+    holeInOne:     10,
+  },
+};
+
+// ============================================================
 //  TOURNAMENT DEFINITIONS
 //
 //  startDate / endDate: YYYYMMDD format (no dashes)

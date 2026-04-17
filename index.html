@@ -24,7 +24,7 @@
       <div class="header-actions">
         <span id="loading-indicator" class="loading-dot">●</span>
         <span id="last-updated" class="last-updated"></span>
-        <button id="refresh-btn" class="refresh-btn" title="Refresh scores">
+        <button id="refresh-btn" class="refresh-btn" title="Refresh scores" ontouchstart="">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M13 2v4h-4"/>
             <path d="M1 12v-4h4"/>
@@ -60,6 +60,9 @@
         <tr>
           <th class="th-rank">POS</th>
           <th class="th-name">MANAGER</th>
+          <th class="th-pts th-sortable" data-sort="points" onclick="setSortBy('points')">
+            <span class="th-long">POINTS</span><span class="th-short">PTS</span><span class="sort-arrow">▼</span>
+          </th>
           <th class="th-score th-sortable sort-active" data-sort="combined" onclick="setSortBy('combined')">
             <span class="th-long">COMBINED</span><span class="th-short">COMB</span><span class="sort-arrow">▼</span>
           </th>
@@ -71,7 +74,7 @@
       </thead>
       <tbody id="leaderboard-body">
         <tr>
-          <td colspan="5" class="loading-cell">Loading scores…</td>
+          <td colspan="6" class="loading-cell">Loading scores…</td>
         </tr>
       </tbody>
     </table>
@@ -98,6 +101,7 @@
         window.state.expandedGolfers.clear();
         window.state.expandedBB.clear();
         window.state.bbHighlight.clear();
+        window.state.expandedPoints.clear();
       }
       fetchScores();
     }
