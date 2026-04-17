@@ -564,7 +564,7 @@ html, body {
   border-radius: var(--radius);
   color: var(--text-muted);
   font-family: 'DM Mono', monospace;
-  font-size: 10px;
+  font-size: 9px;
   letter-spacing: 0.06em;
   cursor: pointer;
   text-transform: uppercase;

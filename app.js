@@ -491,7 +491,7 @@ function renderScorecard(rounds, opts) {
       }
     }
     const safeGolferName = opts.golferName.replace(/'/g, "\\'");
-    const toggleLabel = opts.bbHighlightOn ? "Hide BB Holes" : "Show BB Holes";
+    const toggleLabel = opts.bbHighlightOn ? "Hide BB" : "Show BB";
     html += `<div class="hole-breakdown-top-row">
       ${renderRoundChips(opts.g.rounds)}
       <button class="bb-toggle-btn ${opts.bbHighlightOn ? "active" : ""}"
