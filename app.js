@@ -848,19 +848,19 @@ function renderPointsBreakdown(pts) {
   add(`Pars (${counts.par})`,                  perHolePoints.par);
   add(`Bogeys (${counts.bogey})`,              perHolePoints.bogey);
   add(`Double Bogeys (${counts.double})`,      perHolePoints.double);
-  add(`Worse than Double (${counts.worse})`,   perHolePoints.worse);
+  add(`Double Bogeys+(${counts.worse})`,       perHolePoints.worse);
 
   if (finishPoints.points !== 0)
     add(`Finish Position (${finishPoints.position})`, finishPoints.points);
 
   if (bonusPoints.birdieStreaks !== 0)
-    add(`Birdie Streak (${bonusCounts.birdieStreaks})`, bonusPoints.birdieStreaks);
+    add(`3+ Birdie Streak (${bonusCounts.birdieStreaks})`, bonusPoints.birdieStreaks);
   if (bonusPoints.bogeyFreeRounds !== 0)
     add(`Bogey-Free Round (${bonusCounts.bogeyFreeRounds})`, bonusPoints.bogeyFreeRounds);
   if (bonusPoints.allUnder70 !== 0)
-    add("All Rounds Under 70", bonusPoints.allUnder70);
+    add("All Rounds ≤ 70", bonusPoints.allUnder70);
   if (bonusPoints.holeInOne !== 0)
-    add(`Hole in One (${bonusCounts.holeInOne})`, bonusPoints.holeInOne);
+    add(`Hole-in-One (${bonusCounts.holeInOne})`, bonusPoints.holeInOne);
 
   const rowsHtml = rows.map(r => `
     <tr>
@@ -894,13 +894,13 @@ function buildPointsGuide() {
     par:         "Par",
     bogey:       "Bogey",
     double:      "Double Bogey",
-    worse:       "Double Bogey +",
+    worse:       "Double Bogey+",
   };
 
   const bonusLabels = {
-    birdieStreak:   "Birdie Streak (3 consec)",
+    birdieStreak:   "3+ Birdie Streak",
     bogeyFreeRound: "Bogey-Free Round",
-    allUnder70:     "All Rounds Under 70",
+    allUnder70:     "All Rounds ≤ 70",
     holeInOne:      "Hole-in-One",
   };
 
@@ -938,7 +938,7 @@ function buildPointsGuide() {
           <table class="pg-table"><tbody>${perHoleRows}</tbody></table>
         </div>
         <div class="pg-section" style="margin-top:12px">
-          <div class="pg-section-title">Bonuses</div>
+          <div class="pg-section-title">Bonus</div>
           <table class="pg-table"><tbody>${bonusRows}</tbody></table>
         </div>
       </div>

@@ -980,6 +980,7 @@ html, body {
   .points-guide-btn { font-size: 11px; padding: 5px 8px; }
 
   .points-guide-popup {
+    max-width: 420px;
     width: calc(100vw - 32px);
     max-height: 70vh;
     overflow-y: auto;
