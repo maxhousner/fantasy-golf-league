@@ -24,6 +24,7 @@ const state = {
   bbHighlight:      new Set(), // Set of "managerId|golferName" strings
   expandedPoints:   new Set(), // Set of "managerId|golferName" strings
   sortBy:           "points", // "combined" | "bestball" | "points"
+  cutLowestPlayer:  true,
 };
 
 // ============================================================
@@ -370,10 +371,20 @@ function computeLeaderboard() {
   const results = MANAGERS.map(manager => {
     const golferNames = manager.golfers[ACTIVE_TOURNAMENT] ?? [];
     const golferPoints = calcPoints(golferNames);
+    const scoredNames = golferNames.filter(n => golferPoints[n]);
+
+    let cutPlayerName = null;
+    if (state.cutLowestPlayer && scoredNames.length > 0) {
+      cutPlayerName = scoredNames.reduce((min, n) =>
+        golferPoints[n].grandTotal < golferPoints[min].grandTotal ? n : min
+      );
+    }
+
     const teamPoints = golferNames.length > 0 && state.tournamentState !== "pre"
-      ? Object.values(golferPoints).reduce((s, p) => s + p.grandTotal, 0)
+      ? scoredNames.filter(n => n !== cutPlayerName).reduce((s, n) => s + golferPoints[n].grandTotal, 0)
       : null;
-    return { manager, golferNames, combined: calcCombined(golferNames), bestBall: calcBestBall(golferNames), golferPoints, teamPoints };
+
+    return { manager, golferNames, combined: calcCombined(golferNames), bestBall: calcBestBall(golferNames), golferPoints, teamPoints, cutPlayerName };
   });
   sortLeaderboard(results);
   assignRanks(results);
@@ -527,7 +538,7 @@ function renderLeaderboard() {
                 <span class="golfer-position">${g.position}</span>
               </div>
               <div class="golfer-list-right">
-                ${gPts ? `<span class="golfer-pts">${formatPoints(gPts.grandTotal)}</span>` : ""}
+                ${gPts ? `<span class="golfer-pts ${name === result.cutPlayerName ? "pts-cut" : ""}">${formatPoints(gPts.grandTotal)}</span>` : ""}
                 <span class="golfer-score ${scoreColorClass(g.overallToPar)}">${g.overallToParDisplay}</span>
                 <span class="golfer-expand-chevron">${isGolferExpanded ? "▲" : "▼"}</span>
               </div>
@@ -929,6 +940,10 @@ function buildPointsGuide() {
           <div class="pg-section-title">Bonus</div>
           <table class="pg-table"><tbody>${bonusRows}</tbody></table>
         </div>
+        <div class="pg-section" style="margin-top:12px">
+          <button id="cut-lowest-btn" class="pg-toggle-btn ${state.cutLowestPlayer ? "active" : ""}"
+            onclick="event.stopPropagation(); toggleCutLowest()">Cut Lowest Player</button>
+        </div>
       </div>
       <div class="pg-col">
         <div class="pg-section">
@@ -953,6 +968,13 @@ document.addEventListener("click", () => {
   document.getElementById("points-guide-popup")?.classList.remove("open");
   document.querySelector(".points-guide-btn")?.classList.remove("lit");
 });
+
+function toggleCutLowest() {
+  state.cutLowestPlayer = !state.cutLowestPlayer;
+  document.getElementById("cut-lowest-btn")?.classList.toggle("active", state.cutLowestPlayer);
+  state.leaderboard = computeLeaderboard();
+  render();
+}
 
 // ============================================================
 //  BOOTSTRAP
@@ -980,3 +1002,4 @@ window.togglePointsBreakdown  = togglePointsBreakdown;
 window.showBBPopup            = showBBPopup;
 window.setSortBy              = setSortBy;
 window.togglePointsGuide      = togglePointsGuide;
+window.toggleCutLowest        = toggleCutLowest;

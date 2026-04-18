@@ -509,6 +509,8 @@ html, body {
   flex-shrink: 0;
 }
 
+.golfer-pts.pts-cut { color: var(--text-muted); }
+
 /* Round chips — nowrap, flex row, never line-break */
 .golfer-rounds {
   display: flex;
@@ -885,6 +887,29 @@ html, body {
 
 .pg-label { color: var(--text-secondary); }
 .pg-value { color: var(--accent); text-align: right; white-space: nowrap; }
+
+.pg-toggle-btn {
+  width: 100%;
+  padding: 5px 8px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-secondary);
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  text-transform: uppercase;
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+@media (hover: hover) {
+  .pg-toggle-btn:hover { border-color: var(--accent); color: var(--accent); }
+}
+
+.pg-toggle-btn.active { background: rgba(96, 165, 250, 0.08); border-color: var(--accent); color: var(--accent); }
 
 /* ============================================================
    FOOTER

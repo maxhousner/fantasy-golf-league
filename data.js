@@ -27,7 +27,7 @@ const LEAGUE_SETTINGS = {
 
 const POINTS_CONFIG = {
   perHole: {
-    doubleEagle: 20,
+    doubleEagle: 13,
     eagle: 8,
     birdie: 3,
     par: 0.5,
@@ -54,10 +54,10 @@ const POINTS_CONFIG = {
     { min: 41, max: 50, pts: 1 },
   ],
   bonuses: {
-    birdieStreak: 3,
-    bogeyFreeRound: 3,
+    birdieStreak: 5,
+    bogeyFreeRound: 5,
     allUnder70: 5,
-    holeInOne: 10,
+    holeInOne: 20,
   },
 };
 
