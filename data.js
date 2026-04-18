@@ -105,8 +105,6 @@ const TOURNAMENTS = {
 
 // ============================================================
 //  MANAGERS & ROSTERS
-//
-//  Golfer names must match ESPN displayName exactly.
 // ============================================================
 
 const MANAGERS = [
@@ -224,3 +222,20 @@ const DRAFT_LOG = {
   us_open: { round_1: [], round_2: [], round_3: [], round_4: [], round_5: [] },
   the_open: { round_1: [], round_2: [], round_3: [], round_4: [], round_5: [] },
 };
+
+// ============================================================
+//  STARTUP VALIDATION
+// ============================================================
+
+(function validateConfig() {
+  if (!TOURNAMENTS[ACTIVE_TOURNAMENT]) {
+    console.error(`[data.js] ACTIVE_TOURNAMENT "${ACTIVE_TOURNAMENT}" is not a valid key. Valid keys: ${Object.keys(TOURNAMENTS).join(", ")}`);
+  }
+  for (const manager of MANAGERS) {
+    for (const [tournament, golfers] of Object.entries(manager.golfers)) {
+      if (golfers.length > LEAGUE_SETTINGS.rosterSize) {
+        console.warn(`[data.js] ${manager.name}'s ${tournament} roster has ${golfers.length} players, exceeds the ${LEAGUE_SETTINGS.rosterSize}-player limit`);
+      }
+    }
+  }
+})();

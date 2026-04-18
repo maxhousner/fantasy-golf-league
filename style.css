@@ -248,7 +248,6 @@ html, body {
 }
 
 .leaderboard-table .th-rank   { width: 44px; text-align: center; }
-/* .leaderboard-table .th-name   { flexible } */
 .leaderboard-table .th-pts    { width: 100px; text-align: center; }
 .leaderboard-table .th-score  { width: 100px; text-align: center; }
 .leaderboard-table .th-expand { width: 28px; }
@@ -269,7 +268,6 @@ html, body {
   cursor: pointer;
   transition: background 0.1s;
 }
-
 
 @media (hover: hover) {
   .manager-row:hover { background: var(--bg-card); }
@@ -577,8 +575,8 @@ html, body {
   margin-bottom: 12px;
 }
 
-/* BB highlight toggle */
-.bb-toggle-btn {
+/* Shared base for scorecard action buttons */
+.scorecard-btn {
   padding: 4px 6px;
   background: transparent;
   border: 1px solid var(--border);
@@ -593,31 +591,16 @@ html, body {
   touch-action: manipulation;
 }
 
+/* BB highlight toggle */
 @media (hover: hover) {
   .bb-toggle-btn:hover { border-color: var(--green-dim); color: var(--green); }
 }
-
 .bb-toggle-btn.active { background: var(--green-deep); border-color: var(--green-dim); color: var(--green); }
 
-.pts-toggle-btn {
-  padding: 4px 6px;
-  background: transparent;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  color: var(--text-secondary);
-  font-family: 'DM Mono', monospace;
-  font-size: 9px;
-  letter-spacing: 0.06em;
-  cursor: pointer;
-  text-transform: uppercase;
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-}
-
+/* Points breakdown toggle */
 @media (hover: hover) {
   .pts-toggle-btn:hover { border-color: var(--accent); color: var(--accent); }
 }
-
 .pts-toggle-btn.active { background: rgba(96, 165, 250, 0.08); border-color: var(--accent); color: var(--accent); }
 
 /* Points breakdown panel */
@@ -639,7 +622,6 @@ html, body {
 .pts-bd-value {
   font-family: 'DM Mono', monospace;
   font-size: 11px;
-  padding: 4px 8px;
   letter-spacing: 0.03em;
 }
 
@@ -848,7 +830,8 @@ html, body {
 @media (hover: hover) {
   .points-guide-btn:hover { border-color: var(--accent); color: var(--accent); }
 }
-.points-guide-btn:active { border-color: var(--accent); color: var(--accent); }
+.points-guide-btn:active,
+.points-guide-btn.lit { border-color: var(--accent); color: var(--accent); }
 
 .points-guide-popup {
   display: none;
@@ -919,7 +902,6 @@ html, body {
   color: var(--text-muted);
   letter-spacing: 0.04em;
   font-family: 'DM Mono', monospace;
-  font-weight: 100;
 }
 
 /* ============================================================
@@ -935,7 +917,6 @@ html, body {
   .header-brand   { gap: 0; }
   .header-actions { gap: 8px; }
   .brand-abbr     { font-size: 22px; }
-  /* .last-updated   { display: none; } saves space on small screens */
 
   .leaderboard-wrap { padding: 0 10px; margin-top: 14px; }
 
@@ -943,7 +924,6 @@ html, body {
   .leaderboard-table th         { font-size: 10px; padding: 10px 4px; }
   .leaderboard-table .th-rank   { width: 36px; }
   .leaderboard-table .th-pts    { width: 56px; }
-  /* .leaderboard-table .th-expand { width: 30px; } */
   .leaderboard-table .th-score  { width: 56px; }
   .leaderboard-table .th-long   { display: none; }
   .leaderboard-table .th-short  { display: inline; }
@@ -953,7 +933,7 @@ html, body {
   .leaderboard-table td.pts-cell      { padding: 10px 4px; font-size: 24px; }
   .leaderboard-table td.score-cell    { padding: 10px 4px; }
   .leaderboard-table td.expand-cell   { padding: 0 8px 0 4px; }
-  .leaderboard-table td.name-cell     { gap: 0px; }
+  .leaderboard-table td.name-cell     { gap: 0; }
 
   .score-primary { font-size: 24px; }
   .golfer-score  { font-size: 20px; width: 28px; }
