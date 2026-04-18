@@ -880,11 +880,95 @@ function renderPointsBreakdown(pts) {
 }
 
 // ============================================================
+//  POINTS GUIDE
+// ============================================================
+
+function buildPointsGuide() {
+  const popup = document.getElementById("points-guide-popup");
+  if (!popup) return;
+
+  const perHoleLabels = {
+    doubleEagle: "Double Eagle",
+    eagle:       "Eagle",
+    birdie:      "Birdie",
+    par:         "Par",
+    bogey:       "Bogey",
+    double:      "Double Bogey",
+    worse:       "Double Bogey +",
+  };
+
+  const bonusLabels = {
+    birdieStreak:   "Birdie Streak (3 consec)",
+    bogeyFreeRound: "Bogey-Free Round",
+    allUnder70:     "All Rounds Under 70",
+    holeInOne:      "Hole-in-One",
+  };
+
+  function ordinal(n) {
+    const v = n % 100;
+    if (v >= 11 && v <= 13) return `${n}th`;
+    switch (n % 10) {
+      case 1: return `${n}st`;
+      case 2: return `${n}nd`;
+      case 3: return `${n}rd`;
+      default: return `${n}th`;
+    }
+  }
+
+  function ptSign(val) { return val > 0 ? `+${val}` : `${val}`; }
+
+  const perHoleRows = Object.entries(POINTS_CONFIG.perHole).map(([key, val]) =>
+    `<tr><td class="pg-label">${perHoleLabels[key] ?? key}</td><td class="pg-value">${ptSign(val)}</td></tr>`
+  ).join("");
+
+  const finishRows = POINTS_CONFIG.finishPosition.map(r => {
+    const range = r.min === r.max ? ordinal(r.min) : `${ordinal(r.min)}–${ordinal(r.max)}`;
+    return `<tr><td class="pg-label">${range}</td><td class="pg-value">+${r.pts}</td></tr>`;
+  }).join("");
+
+  const bonusRows = Object.entries(POINTS_CONFIG.bonuses).map(([key, val]) =>
+    `<tr><td class="pg-label">${bonusLabels[key] ?? key}</td><td class="pg-value">+${val}</td></tr>`
+  ).join("");
+
+  popup.innerHTML = `
+    <div class="pg-inner">
+      <div class="pg-col">
+        <div class="pg-section">
+          <div class="pg-section-title">Per Hole</div>
+          <table class="pg-table"><tbody>${perHoleRows}</tbody></table>
+        </div>
+        <div class="pg-section" style="margin-top:12px">
+          <div class="pg-section-title">Bonuses</div>
+          <table class="pg-table"><tbody>${bonusRows}</tbody></table>
+        </div>
+      </div>
+      <div class="pg-col">
+        <div class="pg-section">
+          <div class="pg-section-title">Finish Position</div>
+          <table class="pg-table"><tbody>${finishRows}</tbody></table>
+        </div>
+      </div>
+    </div>`;
+
+  popup.onclick = e => e.stopPropagation();
+}
+
+function togglePointsGuide(event) {
+  event.stopPropagation();
+  document.getElementById("points-guide-popup")?.classList.toggle("open");
+}
+
+document.addEventListener("click", () => {
+  document.getElementById("points-guide-popup")?.classList.remove("open");
+});
+
+// ============================================================
 //  BOOTSTRAP
 // ============================================================
 
 async function init() {
   renderHeader();
+  buildPointsGuide();
   await fetchScores();
   setInterval(fetchScores, REFRESH_MS);
   document.getElementById("refresh-btn")?.addEventListener("click", fetchScores);
@@ -903,3 +987,4 @@ window.toggleBBHighlight      = toggleBBHighlight;
 window.togglePointsBreakdown  = togglePointsBreakdown;
 window.showBBPopup            = showBBPopup;
 window.setSortBy              = setSortBy;
+window.togglePointsGuide      = togglePointsGuide;

@@ -191,7 +191,7 @@ html, body {
   background: transparent;
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  color: var(--text-muted);
+  color: var(--text-secondary);
   font-family: 'DM Sans', sans-serif;
   font-size: 13px;
   font-weight: 500;
@@ -354,7 +354,7 @@ html, body {
   text-align: center;
   color: var(--text-muted);
   font-size: 11px;
-  padding: 0 6px;
+  padding: 0 12px 0 4px;
 }
 
 /* ============================================================
@@ -435,7 +435,7 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 9px 6px 9px 12px;
+  padding: 9px 8px 9px 12px;
   cursor: pointer;
   gap: 8px;
   min-width: 0;
@@ -460,7 +460,7 @@ html, body {
 .golfer-list-right {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   flex-shrink: 0; /* Right side never squishes */
 }
 
@@ -495,7 +495,7 @@ html, body {
   line-height: 1;
   color: var(--text-primary);
   flex-shrink: 0;
-  width: 30px;
+  width: 36px;
   text-align: right;
 }
 
@@ -563,8 +563,8 @@ html, body {
   display: flex;
   justify-content: flex-start;
   gap: 6px;
-  margin-top: 6px;
-  margin-bottom: 6px;
+  margin-top: 8px;
+  margin-bottom: 12px;
 }
 
 .hole-breakdown .golfer-rounds { margin-bottom: 8px; }
@@ -622,7 +622,7 @@ html, body {
 
 /* Points breakdown panel */
 .pts-breakdown {
-  margin-bottom: 10px;
+  margin-bottom: 12px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   overflow: hidden;
@@ -818,6 +818,92 @@ html, body {
 }
 
 /* ============================================================
+   POINTS GUIDE
+============================================================ */
+
+.points-guide-container {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  justify-content: center;
+  position: relative;
+}
+
+.points-guide-btn {
+  padding: 6px 14px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-muted);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  letter-spacing: 0.03em;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+@media (hover: hover) {
+  .points-guide-btn:hover { border-color: var(--accent); color: var(--accent); }
+}
+.points-guide-btn:active { border-color: var(--accent); color: var(--accent); }
+
+.points-guide-popup {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  z-index: 200;
+  width: 420px;
+  max-width: calc(100vw - 40px);
+}
+
+.points-guide-popup.open { display: block; }
+
+.pg-inner {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+}
+
+.pg-col { flex: 1; min-width: 0; }
+.pg-section { min-width: 0; }
+
+.pg-section-title {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.pg-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--border);
+}
+
+.pg-table td {
+  padding: 4px 8px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.pg-table tbody tr:last-child td { border-bottom: none; }
+.pg-table tbody tr:nth-child(odd) td { background: var(--bg-row); }
+
+.pg-label { color: var(--text-secondary); }
+.pg-value { color: var(--accent); text-align: right; white-space: nowrap; }
+
+/* ============================================================
    FOOTER
 ============================================================ */
 
@@ -866,12 +952,12 @@ html, body {
   .leaderboard-table td.rank-cell     { font-size: 24px; }
   .leaderboard-table td.pts-cell      { padding: 10px 4px; font-size: 24px; }
   .leaderboard-table td.score-cell    { padding: 10px 4px; }
-  .leaderboard-table td.expand-cell   { padding: 0 4px 0 6px; }
+  .leaderboard-table td.expand-cell   { padding: 0 8px 0 4px; }
   .leaderboard-table td.name-cell     { gap: 0px; }
 
   .score-primary { font-size: 24px; }
-  .golfer-score  { font-size: 18px; width: 24px; }
-  .golfer-pts    { font-size: 18px; }
+  .golfer-score  { font-size: 20px; width: 28px; }
+  .golfer-pts    { font-size: 20px; }
 
   .manager-name { font-size: 14px; }
   .team-name    { font-size: 11px; }
@@ -887,6 +973,18 @@ html, body {
   .scorecard-table th.sc-section-total,
   .scorecard-table td.sc-section-total { padding: 2px 4px; }
 
-  .pts-breakdown-table td { padding: 4px 8px; } 
-  .pts-bd-total-row td { padding-top: 5px; padding-bottom: 5px; } 
+  .pts-breakdown-table td { padding: 4px 8px; }
+  .pts-bd-total-row td { padding-top: 5px; padding-bottom: 5px; }
+
+  .points-guide-container { padding: 0 4px; }
+  .points-guide-btn { font-size: 11px; padding: 5px 8px; }
+
+  .points-guide-popup {
+    width: calc(100vw - 32px);
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+
+  .pg-inner { gap: 10px; padding: 12px; }
+  .pg-table td { padding: 3px 6px; font-size: 10px; }
 }
