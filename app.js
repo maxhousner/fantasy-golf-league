@@ -23,7 +23,7 @@ const state = {
   expandedBB:       new Set(), // Set of managerId strings with BB panel open
   bbHighlight:      new Set(), // Set of "managerId|golferName" strings
   expandedPoints:   new Set(), // Set of "managerId|golferName" strings
-  sortBy:           "combined", // "combined" | "bestball" | "points"
+  sortBy:           "points", // "combined" | "bestball" | "points"
 };
 
 // ============================================================
