@@ -293,20 +293,52 @@ function calcPoints(golferNames, config = POINTS_CONFIG) {
 
     const cfg = config.perHole;
     const counts = { doubleEagle: 0, eagle: 0, birdie: 0, par: 0, bogey: 0, double: 0, worse: 0 };
-    let holeInOnes = 0;
+    let holeInOnes = 0, birdieStreaks = 0, bogeyFreeRounds = 0;
+    const perRoundPoints = [];
 
     for (const round of g.rounds) {
-      for (const hole of round.holes) {
-        if (hole.strokes === 1) holeInOnes++;
+      const holes = [...round.holes].sort((a, b) => a.hole - b.hole);
+      const roundCounts = { doubleEagle: 0, eagle: 0, birdie: 0, par: 0, bogey: 0, double: 0, worse: 0 };
+      let roundHoleInOnes = 0, streak = 0, awardedThisRound = false, roundBirdieStreaks = 0;
+
+      for (const hole of holes) {
+        if (hole.strokes === 1) { holeInOnes++; roundHoleInOnes++; }
         const tp = hole.toPar;
-        if      (tp <= -3) counts.doubleEagle++;
-        else if (tp === -2) counts.eagle++;
-        else if (tp === -1) counts.birdie++;
-        else if (tp === 0)  counts.par++;
-        else if (tp === 1)  counts.bogey++;
-        else if (tp === 2)  counts.double++;
-        else                counts.worse++;
+        if      (tp <= -3)  { counts.doubleEagle++; roundCounts.doubleEagle++; }
+        else if (tp === -2) { counts.eagle++;       roundCounts.eagle++; }
+        else if (tp === -1) { counts.birdie++;      roundCounts.birdie++; }
+        else if (tp === 0)  { counts.par++;         roundCounts.par++; }
+        else if (tp === 1)  { counts.bogey++;       roundCounts.bogey++; }
+        else if (tp === 2)  { counts.double++;      roundCounts.double++; }
+        else                { counts.worse++;       roundCounts.worse++; }
+
+        if (tp <= -1) {
+          streak++;
+          if (streak >= 3 && !awardedThisRound) { birdieStreaks++; roundBirdieStreaks++; awardedThisRound = true; }
+        } else {
+          streak = 0;
+        }
       }
+
+      const roundBogeyFree = holes.length > 0 && holes.every(h => h.toPar <= 0);
+      if (roundBogeyFree) bogeyFreeRounds++;
+
+      const roundPerHole =
+        roundCounts.doubleEagle * cfg.doubleEagle +
+        roundCounts.eagle       * cfg.eagle +
+        roundCounts.birdie      * cfg.birdie +
+        roundCounts.par         * cfg.par +
+        roundCounts.bogey       * cfg.bogey +
+        roundCounts.double      * cfg.double +
+        roundCounts.worse       * cfg.worse;
+
+      perRoundPoints.push({
+        roundNum: round.roundNum,
+        points:   roundPerHole +
+                  roundBirdieStreaks   * config.bonuses.birdieStreak +
+                  (roundBogeyFree ? config.bonuses.bogeyFreeRound : 0) +
+                  roundHoleInOnes     * config.bonuses.holeInOne,
+      });
     }
 
     const perHolePoints = {
@@ -321,26 +353,13 @@ function calcPoints(golferNames, config = POINTS_CONFIG) {
     perHolePoints.total = perHolePoints.doubleEagle + perHolePoints.eagle + perHolePoints.birdie +
       perHolePoints.par + perHolePoints.bogey + perHolePoints.double + perHolePoints.worse;
 
-    // Finish position — only after 4 rounds and not missed cut
-    const finishEligible = (state.tournamentState === "post" || g.rounds.length >= 4) && !g.missedCut;
+    // Finish position — only after 4 complete rounds and not missed cut
+    const fourRoundsComplete = state.tournamentState === "post" ||
+      (g.rounds.length >= 4 && g.rounds[g.rounds.length - 1]?.holes.length === 18);
+    const finishEligible = fourRoundsComplete && !g.missedCut;
     const finishPts = finishEligible ? getFinishPoints(g.position, config) : 0;
 
-    // Bonuses
-    let birdieStreaks = 0, bogeyFreeRounds = 0;
-    for (const round of g.rounds) {
-      const holes = [...round.holes].sort((a, b) => a.hole - b.hole);
-      let streak = 0, awardedThisRound = false;
-      for (const hole of holes) {
-        if (hole.toPar <= -1) {
-          streak++;
-          if (streak >= 3 && !awardedThisRound) { birdieStreaks++; awardedThisRound = true; }
-        } else {
-          streak = 0;
-        }
-      }
-      if (holes.length > 0 && holes.every(h => h.toPar <= 0)) bogeyFreeRounds++;
-    }
-    const allUnder70 = g.rounds.length >= 4 && !g.missedCut && g.rounds.every(r => r.totalStrokes < 70);
+    const allUnder70 = g.rounds.length >= 4 && !g.missedCut && g.rounds.every(r => r.holes.length === 18 && r.totalStrokes < 70);
 
     const bonusPoints = {
       birdieStreaks:   birdieStreaks   * config.bonuses.birdieStreak,
@@ -357,6 +376,7 @@ function calcPoints(golferNames, config = POINTS_CONFIG) {
       perHolePoints,
       finishPoints: { position: g.position, points: finishPts },
       bonusPoints,
+      perRoundPoints,
       grandTotal: perHolePoints.total + finishPts + bonusPoints.total,
     };
   }
@@ -488,7 +508,7 @@ function renderLeaderboard() {
         <td class="rank-cell">${result.rank}</td>
         <td class="name-cell">
           <span class="manager-name">${result.manager.name}</span>
-          <span class="team-name">${result.manager.teamName}</span>
+          <span class="team-name">${result.manager.teamName[ACTIVE_TOURNAMENT] ?? ""}</span>
         </td>
         <td class="pts-cell">
           <span class="score-primary">${hasTeamPoints ? formatPoints(result.teamPoints) : "--"}</span>
@@ -529,13 +549,15 @@ function renderLeaderboard() {
 
         const cutBadge = g.missedCut ? `<span class="cut-badge">MC</span>` : "";
         const gPts = result.golferPoints[name];
+        const lastRound = g.rounds[g.rounds.length - 1];
+        const isPlaying = state.tournamentState === "live" && lastRound?.holes.length >= 1 && lastRound.holes.length < 18;
         html += `
           <div class="golfer-list-item ${g.missedCut ? "cut" : ""} ${isGolferExpanded ? "expanded" : ""}">
             <div class="golfer-list-main"
                  onclick="toggleGolfer('${result.manager.id}', '${name.replace(/'/g, "\\'")}')">
               <div class="golfer-list-left">
                 <span class="golfer-name">${name}${cutBadge}</span>
-                <span class="golfer-position">${g.position}</span>
+                <span class="golfer-position">${g.position}</span>${isPlaying ? `<span class="playing-dot">●</span>` : ""}
               </div>
               <div class="golfer-list-right">
                 ${gPts ? `<span class="golfer-pts ${name === result.cutPlayerName ? "pts-cut" : ""}">${formatPoints(gPts.grandTotal)}</span>` : ""}
@@ -650,7 +672,15 @@ function renderScorecard(rounds, opts) {
     const frontToPar = frontStrokes - frontPar, backToPar = backStrokes - backPar;
 
     html += `<div class="scorecard-round">`;
-    html += `<div class="scorecard-round-label">Round ${round.roundNum}: ${round.totalStrokes} / <span class="${scoreColorClass(round.toPar)}">${round.toParDisplay}</span></div>`;
+    if (opts.type === "player") {
+      const result = state.leaderboard.find(r => r.manager.id === opts.managerId);
+      const gPts = result?.golferPoints[opts.golferName];
+      const roundPts = gPts?.perRoundPoints?.find(r => r.roundNum === round.roundNum)?.points ?? null;
+      const ptsDisplay = roundPts !== null ? `<span class="score-blue">${formatPoints(roundPts)}</span> / ` : "";
+      html += `<div class="scorecard-round-label">Round ${round.roundNum}: ${round.totalStrokes} / ${ptsDisplay}<span class="${scoreColorClass(round.toPar)}">${round.toParDisplay}</span></div>`;
+    } else {
+      html += `<div class="scorecard-round-label">Round ${round.roundNum}: ${round.totalStrokes} / <span class="${scoreColorClass(round.toPar)}">${round.toParDisplay}</span></div>`;
+    }
     html += `<div class="scorecard-scroll-wrap"><table class="scorecard-table">`;
 
     // HOLE header row
@@ -849,9 +879,6 @@ function renderPointsBreakdown(pts) {
   add(`Double Bogeys (${counts.double})`,      perHolePoints.double);
   add(`Double Bogeys+(${counts.worse})`,       perHolePoints.worse);
 
-  if (finishPoints.points !== 0)
-    add(`Finish Position (${finishPoints.position})`, finishPoints.points);
-
   if (bonusPoints.birdieStreaks !== 0)
     add(`3+ Birdie Streak (${bonusCounts.birdieStreaks})`, bonusPoints.birdieStreaks);
   if (bonusPoints.bogeyFreeRounds !== 0)
@@ -860,6 +887,9 @@ function renderPointsBreakdown(pts) {
     add("All Rounds ≤ 70", bonusPoints.allUnder70);
   if (bonusPoints.holeInOne !== 0)
     add(`Hole-in-One (${bonusCounts.holeInOne})`, bonusPoints.holeInOne);
+
+  if (finishPoints.points !== 0)
+    add(`Finish Position (${finishPoints.position})`, finishPoints.points);
 
   const rowsHtml = rows.map(r => `
     <tr>
@@ -939,6 +969,11 @@ function buildPointsGuide() {
         <div class="pg-section" style="margin-top:12px">
           <div class="pg-section-title">Bonus</div>
           <table class="pg-table"><tbody>${bonusRows}</tbody></table>
+        </div>
+        <div class="pg-section" style="margin-top:12px">
+          <table class="pg-table"><tbody>
+            <tr><td class="pg-label"><span class="playing-dot" style="position:relative;top:-1px">●</span> Player in round</td></tr>
+          </tbody></table>
         </div>
         <div class="pg-section" style="margin-top:12px">
           <button id="cut-lowest-btn" class="pg-toggle-btn ${state.cutLowestPlayer ? "active" : ""}"

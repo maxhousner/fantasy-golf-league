@@ -111,7 +111,12 @@ const MANAGERS = [
   {
     id: "manager_1",
     name: "Max",
-    teamName: "[TEAM NAME]",
+    teamName: {
+      the_masters: "[TEAM NAME]",
+      pga_championship: "[TEAM NAME]",
+      us_open: "[TEAM NAME]",
+      the_open: "[TEAM NAME]",
+    },
     golfers: {
       the_masters: [
         "Scottie Scheffler",
@@ -132,7 +137,12 @@ const MANAGERS = [
   {
     id: "manager_2",
     name: "Bennett",
-    teamName: "[TEAM NAME]",
+    teamName: {
+      the_masters: "[TEAM NAME]",
+      pga_championship: "[TEAM NAME]",
+      us_open: "[TEAM NAME]",
+      the_open: "[TEAM NAME]",
+    },
     golfers: {
       the_masters: [
         "Scottie Scheffler",
@@ -153,7 +163,12 @@ const MANAGERS = [
   {
     id: "manager_3",
     name: "Paul",
-    teamName: "[TEAM NAME]",
+    teamName: {
+      the_masters: "[TEAM NAME]",
+      pga_championship: "[TEAM NAME]",
+      us_open: "[TEAM NAME]",
+      the_open: "[TEAM NAME]",
+    },
     golfers: {
       the_masters: [
         "Scottie Scheffler",
@@ -174,7 +189,12 @@ const MANAGERS = [
   {
     id: "manager_4",
     name: "Rehan",
-    teamName: "[TEAM NAME]",
+    teamName: {
+      the_masters: "[TEAM NAME]",
+      pga_championship: "[TEAM NAME]",
+      us_open: "[TEAM NAME]",
+      the_open: "[TEAM NAME]",
+    },
     golfers: {
       the_masters: [
         "Bubba Watson",
@@ -191,7 +211,12 @@ const MANAGERS = [
   {
     id: "manager_5",
     name: "Alex",
-    teamName: "[TEAM NAME]",
+    teamName: {
+      the_masters: "[TEAM NAME]",
+      pga_championship: "[TEAM NAME]",
+      us_open: "[TEAM NAME]",
+      the_open: "[TEAM NAME]",
+    },
     golfers: {
       the_masters: [],
       pga_championship: [],
@@ -202,7 +227,12 @@ const MANAGERS = [
   {
     id: "manager_6",
     name: "Will",
-    teamName: "[TEAM NAME]",
+    teamName: {
+      the_masters: "[TEAM NAME]",
+      pga_championship: "[TEAM NAME]",
+      us_open: "[TEAM NAME]",
+      the_open: "[TEAM NAME]",
+    },
     golfers: {
       the_masters: [],
       pga_championship: [],

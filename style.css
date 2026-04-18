@@ -346,6 +346,7 @@ html, body {
 .score-under { color: var(--green); }
 .score-even  { color: var(--text-primary); }
 .score-over  { color: var(--red); }
+.score-blue  { color: var(--accent); }
 
 /* Expand chevron */
 .leaderboard-table td.expand-cell {
@@ -484,6 +485,14 @@ html, body {
   font-family: 'DM Mono', monospace;
   white-space: nowrap;
   flex-shrink: 0;
+}
+
+.playing-dot {
+  font-size: 7px;
+  color: var(--accent);
+  flex-shrink: 0;
+  line-height: 1;
+  align-self: center;
 }
 
 .golfer-score {
