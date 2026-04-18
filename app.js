@@ -972,7 +972,7 @@ function buildPointsGuide() {
         </div>
         <div class="pg-section" style="margin-top:12px">
           <table class="pg-table"><tbody>
-            <tr><td class="pg-label"><span class="playing-dot" style="position:relative;top:-1px">●</span> Player in round</td></tr>
+            <tr><td class="pg-label"><span class="playing-dot" style="position:relative;top:-1px;font-size:7px">●</span> Player in round</td></tr>
           </tbody></table>
         </div>
         <div class="pg-section" style="margin-top:12px">

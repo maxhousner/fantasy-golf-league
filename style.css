@@ -488,7 +488,7 @@ html, body {
 }
 
 .playing-dot {
-  font-size: 7px;
+  font-size: 8px;
   color: var(--accent);
   flex-shrink: 0;
   line-height: 1;
