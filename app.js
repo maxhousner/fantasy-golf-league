@@ -496,6 +496,7 @@ function renderLeaderboard() {
   }
 
   for (const result of state.leaderboard) {
+    if (state.tournamentState !== "pre" && result.golferNames.length === 0) continue;
     const isExpanded = state.expandedManagers.has(result.manager.id);
     const hasRoster  = result.golferNames.length > 0;
     const hasScores  = result.combined.total !== null;

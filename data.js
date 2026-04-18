@@ -112,7 +112,7 @@ const MANAGERS = [
     id: "manager_1",
     name: "Max",
     teamName: {
-      the_masters: "[TEAM NAME]",
+      the_masters: "Bunker? I Barely Know Her",
       pga_championship: "[TEAM NAME]",
       us_open: "[TEAM NAME]",
       the_open: "[TEAM NAME]",
@@ -138,7 +138,7 @@ const MANAGERS = [
     id: "manager_2",
     name: "Bennett",
     teamName: {
-      the_masters: "[TEAM NAME]",
+      the_masters: "BENNETT'S BOYS",
       pga_championship: "[TEAM NAME]",
       us_open: "[TEAM NAME]",
       the_open: "[TEAM NAME]",
@@ -164,7 +164,7 @@ const MANAGERS = [
     id: "manager_3",
     name: "Paul",
     teamName: {
-      the_masters: "[TEAM NAME]",
+      the_masters: "I'm Brandon!",
       pga_championship: "[TEAM NAME]",
       us_open: "[TEAM NAME]",
       the_open: "[TEAM NAME]",
@@ -190,7 +190,7 @@ const MANAGERS = [
     id: "manager_4",
     name: "Rehan",
     teamName: {
-      the_masters: "[TEAM NAME]",
+      the_masters: "re-birdie",
       pga_championship: "[TEAM NAME]",
       us_open: "[TEAM NAME]",
       the_open: "[TEAM NAME]",
@@ -240,18 +240,23 @@ const MANAGERS = [
       the_open: [],
     },
   },
+  {
+    id: "manager_7",
+    name: "Stein",
+    teamName: {
+      the_masters: "[TEAM NAME]",
+      pga_championship: "[TEAM NAME]",
+      us_open: "[TEAM NAME]",
+      the_open: "[TEAM NAME]",
+    },
+    golfers: {
+      the_masters: [],
+      pga_championship: [],
+      us_open: [],
+      the_open: [],
+    },
+  },
 ];
-
-// ============================================================
-//  DRAFT LOG  (reference only — does not affect scoring)
-// ============================================================
-
-const DRAFT_LOG = {
-  the_masters: { round_1: [], round_2: [], round_3: [], round_4: [], round_5: [] },
-  pga_championship: { round_1: [], round_2: [], round_3: [], round_4: [], round_5: [] },
-  us_open: { round_1: [], round_2: [], round_3: [], round_4: [], round_5: [] },
-  the_open: { round_1: [], round_2: [], round_3: [], round_4: [], round_5: [] },
-};
 
 // ============================================================
 //  STARTUP VALIDATION
