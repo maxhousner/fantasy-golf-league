@@ -321,7 +321,7 @@ function calcPoints(golferNames, config = POINTS_CONFIG) {
         }
       }
 
-      const roundBogeyFree = holes.length > 0 && holes.every(h => h.toPar <= 0);
+      const roundBogeyFree = holes.length === 18 && holes.every(h => h.toPar <= 0);
       if (roundBogeyFree) bogeyFreeRounds++;
 
       const roundPerHole =
@@ -671,11 +671,11 @@ function renderScorecard(rounds, opts) {
     const strokeKey   = opts.type === "bestball" ? "bestStrokes" : "strokes";
     const sumStrokes  = arr => arr.reduce((s, { hData }) => s + (hData?.[strokeKey] ?? 0), 0);
     const sumPar      = arr => arr.reduce((s, { hData }) => s + (hData?.par ?? 0), 0);
-    const anyPlayed   = arr => arr.some(({ hData }) => hData !== null);
+    const allPlayed   = arr => arr.every(({ hData }) => hData !== null);
 
     const frontStrokes = sumStrokes(front), backStrokes = sumStrokes(back);
     const frontPar = sumPar(front), backPar = sumPar(back);
-    const frontPlayed = anyPlayed(front), backPlayed = anyPlayed(back);
+    const frontPlayed = allPlayed(front), backPlayed = allPlayed(back);
     const frontToPar = frontStrokes - frontPar, backToPar = backStrokes - backPar;
 
     html += `<div class="scorecard-round">`;
@@ -705,7 +705,7 @@ function renderScorecard(rounds, opts) {
     html += `<td class="sc-section-total sc-par-cell">${frontPlayed ? frontPar : "-"}</td>`;
     for (const { hData } of back)  html += `<td class="sc-par-cell">${hData?.par ?? "-"}</td>`;
     html += `<td class="sc-section-total sc-par-cell">${backPlayed ? backPar : "-"}</td>`;
-    html += `<td class="sc-section-total sc-par-cell">${frontPlayed || backPlayed ? frontPar + backPar : "-"}</td>`;
+    html += `<td class="sc-section-total sc-par-cell">${frontPlayed && backPlayed ? frontPar + backPar : "-"}</td>`;
     html += `</tr>`;
 
     // SCORE row
@@ -720,7 +720,7 @@ function renderScorecard(rounds, opts) {
       html += renderScorecardCell(hData, opts.type, isBB);
     }
     html += renderTotalCell(backPlayed, backStrokes, backToPar);
-    html += renderTotalCell(frontPlayed || backPlayed, frontStrokes + backStrokes, frontToPar + backToPar);
+    html += renderTotalCell(frontPlayed && backPlayed, frontStrokes + backStrokes, frontToPar + backToPar);
     html += `</tr>`;
 
     html += `</tbody></table></div></div>`; // table, scroll-wrap, scorecard-round
@@ -934,7 +934,7 @@ function buildPointsGuide() {
   };
 
   const bonusLabels = {
-    birdieStreak:   "3+ Birdie Streak",
+    birdieStreak:   "3+ Birdie Streak (1 per round)",
     bogeyFreeRound: "Bogey-Free Round",
     allUnder70:     "All Rounds ≤ 70",
     holeInOne:      "Hole-in-One",
