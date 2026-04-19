@@ -934,7 +934,7 @@ function buildPointsGuide() {
   };
 
   const bonusLabels = {
-    birdieStreak:   "3+ Birdie Streak (1 per round)",
+    birdieStreak:   "3+ Birdie Streak<br><span style='opacity:0.7'>(1 per round)</span>",
     bogeyFreeRound: "Bogey-Free Round",
     allUnder70:     "All Rounds ≤ 70",
     holeInOne:      "Hole-in-One",
