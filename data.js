@@ -123,7 +123,6 @@ const MANAGERS = [
         "Collin Morikawa",
         "Justin Rose",
         "Ben Griffin",
-        "Daniel Berger",
         "Akshay Bhatia",
       ],
       pga_championship: [],
