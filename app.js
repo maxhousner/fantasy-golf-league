@@ -116,13 +116,16 @@ function parseESPN(data) {
   for (const comp of competitors) {
     const name = comp.athlete?.displayName;
     if (!name) continue;
+    const rounds = parseRounds(comp.linescores ?? []);
+    const fourRoundToPar = rounds.reduce((s, r) => s + r.toPar, 0);
     playerList.push({
       name,
       order:               comp.order ?? 999,
       missedCut:           inferMissedCut(comp),
-      overallToPar:        parseToParValue(comp.score ?? "E"),
-      overallToParDisplay: comp.score ?? "E",
-      rounds:              parseRounds(comp.linescores ?? []),
+      overallToPar:        fourRoundToPar,
+      overallToParDisplay: rounds.length > 0 ? formatToPar(fourRoundToPar) : (comp.score ?? "E"),
+      espnSortScore:       parseToParValue(comp.score ?? "E"), // includes playoff result, used only for position ranking
+      rounds,
     });
   }
 
@@ -130,9 +133,9 @@ function parseESPN(data) {
   function assignPositions(list, startRank) {
     let rank = startRank;
     for (let i = 0; i < list.length; ) {
-      const score = list[i].overallToPar;
+      const score = list[i].espnSortScore;
       let j = i;
-      while (j < list.length && list[j].overallToPar === score) j++;
+      while (j < list.length && list[j].espnSortScore === score) j++;
       const tied = j - i > 1;
       for (let k = i; k < j; k++) list[k].position = tied ? `T${rank}` : `${rank}`;
       rank = j + 1;
@@ -141,7 +144,7 @@ function parseESPN(data) {
   }
 
   // Active and cut players ranked separately, each sorted by score then ESPN order
-  const byScore = (a, b) => a.overallToPar - b.overallToPar || a.order - b.order;
+  const byScore = (a, b) => a.espnSortScore - b.espnSortScore || a.order - b.order;
   const active  = playerList.filter(p => !p.missedCut).sort(byScore);
   const cut     = playerList.filter(p =>  p.missedCut).sort(byScore);
 
@@ -163,6 +166,7 @@ function parseESPN(data) {
 function parseRounds(linescores) {
   const rounds = [];
   for (const ls of linescores) {
+    if (ls.period > 4) continue; // skip playoff holes (period 5+)
     if (!ls.linescores || ls.linescores.length === 0) continue;
     if (ls.displayValue === "-" && ls.value === 0) continue;
     rounds.push({
@@ -891,7 +895,7 @@ function renderPointsBreakdown(pts) {
   if (bonusPoints.bogeyFreeRounds !== 0)
     add(`Bogey-Free Round (${bonusCounts.bogeyFreeRounds})`, bonusPoints.bogeyFreeRounds);
   if (bonusPoints.allUnder70 !== 0)
-    add("All Rounds ≤ 70", bonusPoints.allUnder70);
+    add("All Rounds < 70", bonusPoints.allUnder70);
   if (bonusPoints.holeInOne !== 0)
     add(`Hole-in-One (${bonusCounts.holeInOne})`, bonusPoints.holeInOne);
 
@@ -936,7 +940,7 @@ function buildPointsGuide() {
   const bonusLabels = {
     birdieStreak:   "3+ Birdie Streak<br><span style='opacity:0.7'>(1 per round)</span>",
     bogeyFreeRound: "Bogey-Free Round",
-    allUnder70:     "All Rounds ≤ 70",
+    allUnder70:     "All Rounds < 70",
     holeInOne:      "Hole-in-One",
   };
 
