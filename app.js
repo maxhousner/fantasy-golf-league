@@ -25,6 +25,7 @@ const state = {
   expandedPoints:   new Set(), // Set of "managerId|golferName" strings
   sortBy:           "points", // "combined" | "bestball" | "points"
   cutLowestPlayer:  true,
+  showCombined:     false,
 };
 
 // ============================================================
@@ -476,12 +477,17 @@ function renderLeaderboard() {
     th.classList.toggle("sort-active", th.dataset.sort === state.sortBy);
   });
 
+  const thCombined = document.getElementById("th-combined");
+  if (thCombined) thCombined.style.display = state.showCombined ? "" : "none";
+
+  const colspan = state.showCombined ? 6 : 5;
+
   if (state.loading && !state.leaderboard.length) {
-    container.innerHTML = `<tr><td colspan="5" class="loading-cell">Fetching scores from ESPN…</td></tr>`;
+    container.innerHTML = `<tr><td colspan="${colspan}" class="loading-cell">Fetching scores from ESPN…</td></tr>`;
     return;
   }
   if (state.error && !state.leaderboard.length) {
-    container.innerHTML = `<tr><td colspan="5" class="error-cell">${state.error}</td></tr>`;
+    container.innerHTML = `<tr><td colspan="${colspan}" class="error-cell">${state.error}</td></tr>`;
     return;
   }
 
@@ -489,10 +495,10 @@ function renderLeaderboard() {
 
   if (state.tournamentState === "pre") {
     const t = TOURNAMENTS[ACTIVE_TOURNAMENT];
-    html += `<tr><td colspan="5" class="info-cell">Tournament Starts: ${formatDateDisplay(t.startDate)} | Draft: ${formatDateDisplay(t.startDate-4)}</td></tr>`;
+    html += `<tr><td colspan="${colspan}" class="info-cell">Tournament Starts: ${formatDateDisplay(t.startDate)} | Draft: ${formatDateDisplay(t.startDate-4)}</td></tr>`;
   }
   if (state.error) {
-    html += `<tr><td colspan="5" class="error-cell" style="padding:8px 20px;">${state.error}</td></tr>`;
+    html += `<tr><td colspan="${colspan}" class="error-cell" style="padding:8px 20px;">${state.error}</td></tr>`;
   }
 
   for (const result of state.leaderboard) {
@@ -514,17 +520,17 @@ function renderLeaderboard() {
         <td class="pts-cell">
           <span class="score-primary">${hasTeamPoints ? formatPoints(result.teamPoints) : "--"}</span>
         </td>
-        <td class="score-cell ${hasScores ? scoreColorClass(result.combined.total) : ""}">
-          <span class="score-primary">${result.combined.totalDisplay}</span>
-        </td>
         <td class="score-cell ${hasScores ? scoreColorClass(result.bestBall.total) : ""}">
           <span class="score-primary">${result.bestBall.totalDisplay}</span>
         </td>
+        ${state.showCombined ? `<td class="score-cell ${hasScores ? scoreColorClass(result.combined.total) : ""}">
+          <span class="score-primary">${result.combined.totalDisplay}</span>
+        </td>` : ""}
         <td class="expand-cell">${hasRoster ? (isExpanded ? "▲" : "▼") : ""}</td>
       </tr>`;
 
     if (isExpanded && hasRoster) {
-      html += `<tr class="detail-row"><td colspan="6"><div class="detail-panel">`;
+      html += `<tr class="detail-row"><td colspan="${colspan}"><div class="detail-panel">`;
       html += `<div class="detail-section-label">Roster</div>`;
       html += `<div class="golfer-list">`;
 
@@ -976,8 +982,9 @@ function buildPointsGuide() {
             <tr><td class="pg-label"><span class="playing-dot" style="position:relative;top:-1px;font-size:7px">●</span> Player in round</td></tr>
           </tbody></table>
         </div>
-        <div class="pg-section" style="margin-top:12px">
+        <div class="pg-section" style="margin-top:12px; display:flex; justify-content:center">
           <button id="cut-lowest-btn" class="pg-toggle-btn ${state.cutLowestPlayer ? "active" : ""}"
+            style="width:auto; text-align:center"
             onclick="event.stopPropagation(); toggleCutLowest()">Cut Lowest Player</button>
         </div>
       </div>
@@ -1012,6 +1019,17 @@ function toggleCutLowest() {
   render();
 }
 
+function toggleCombined() {
+  state.showCombined = !state.showCombined;
+  if (!state.showCombined && state.sortBy === "combined") {
+    state.sortBy = "points";
+  }
+  const btn = document.getElementById("combined-toggle-btn");
+  if (btn) btn.textContent = state.showCombined ? "Hide Combined Scores" : "Show Combined Scores";
+  btn?.classList.toggle("active", state.showCombined);
+  renderLeaderboard();
+}
+
 // ============================================================
 //  BOOTSTRAP
 // ============================================================
@@ -1039,3 +1057,4 @@ window.showBBPopup            = showBBPopup;
 window.setSortBy              = setSortBy;
 window.togglePointsGuide      = togglePointsGuide;
 window.toggleCutLowest        = toggleCutLowest;
+window.toggleCombined         = toggleCombined;

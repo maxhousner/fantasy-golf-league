@@ -844,6 +844,35 @@ html, body {
 .points-guide-btn:active,
 .points-guide-btn.lit { border-color: var(--accent); color: var(--accent); }
 
+.combined-toggle-container {
+  max-width: 1040px;
+  margin: 8px auto 0;
+  padding: 0 20px;
+  display: flex;
+  justify-content: center;
+}
+
+.combined-toggle-btn {
+  padding: 6px 14px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-muted);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  letter-spacing: 0.03em;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+@media (hover: hover) {
+  .combined-toggle-btn:hover { border-color: var(--accent); color: var(--accent); }
+}
+.combined-toggle-btn:active { border-color: var(--accent); color: var(--accent); }
+.combined-toggle-btn.active { border-color: var(--accent); color: var(--accent); }
+
 .points-guide-popup {
   display: none;
   position: absolute;
@@ -992,6 +1021,9 @@ html, body {
 
   .points-guide-container { padding: 0 4px; }
   .points-guide-btn { font-size: 11px; padding: 5px 8px; }
+
+  .combined-toggle-container { padding: 0 4px; }
+  .combined-toggle-btn { font-size: 11px; padding: 5px 8px; }
 
   .points-guide-popup {
     max-width: 420px;

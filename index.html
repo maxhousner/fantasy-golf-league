@@ -60,14 +60,14 @@
         <tr>
           <th class="th-rank">POS</th>
           <th class="th-name">MANAGER</th>
-          <th class="th-pts th-sortable" data-sort="points" onclick="setSortBy('points')">
+          <th class="th-pts th-sortable sort-active" data-sort="points" onclick="setSortBy('points')">
             <span class="th-long">POINTS</span><span class="th-short">PTS</span><span class="sort-arrow">▼</span>
-          </th>
-          <th class="th-score th-sortable sort-active" data-sort="combined" onclick="setSortBy('combined')">
-            <span class="th-long">COMBINED</span><span class="th-short">COMB</span><span class="sort-arrow">▼</span>
           </th>
           <th class="th-score th-sortable" data-sort="bestball" onclick="setSortBy('bestball')">
             <span class="th-long">BEST BALL</span><span class="th-short">BB</span><span class="sort-arrow">▼</span>
+          </th>
+          <th id="th-combined" class="th-score th-sortable" data-sort="combined" onclick="setSortBy('combined')" style="display:none">
+            <span class="th-long">COMBINED</span><span class="th-short">COMB</span><span class="sort-arrow">▼</span>
           </th>
           <th class="th-expand"></th>
         </tr>
@@ -84,6 +84,11 @@
   <div class="points-guide-container">
     <div id="points-guide-popup" class="points-guide-popup"></div>
     <button class="points-guide-btn" onclick="togglePointsGuide(event)">Points Guide</button>
+  </div>
+
+  <!-- ========== COMBINED TOGGLE ========== -->
+  <div class="combined-toggle-container">
+    <button id="combined-toggle-btn" class="combined-toggle-btn" onclick="toggleCombined()">Show Combined Scores</button>
   </div>
 
   <!-- ========== FOOTER ========== -->
