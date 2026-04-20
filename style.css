@@ -953,6 +953,9 @@ html, body {
    FIELD VIEW
 ============================================================ */
 
+/* Field tab active state mirrors the refresh button: accent border + text, no filled background */
+#field-tab.active { background: transparent; border-color: var(--accent); color: var(--accent); }
+
 /* Divider between tournament tabs and Field button */
 .nav-divider {
   color: var(--border);
@@ -963,16 +966,10 @@ html, body {
   user-select: none;
 }
 
-/* Field tab gets a touch more left spacing via the divider; no other special style needed */
-.field-view-tab { /* inherits all .tourney-tab styles */ }
-
-/* Fix 1: remove detail-panel padding — scorecard fills flush to row edge */
 #field-view .detail-panel { padding: 0; }
 
-/* Fix 2: golfer names match the secondary tone used in manager detail rows */
 #field-view .manager-name { color: var(--text-secondary); }
 
-/* Fix 3: sortable field headers — mirrors .th-sortable behaviour */
 .th-field-sortable { cursor: pointer; user-select: none; }
 @media (hover: hover) {
   .th-field-sortable:hover { color: var(--text-secondary); }
@@ -983,11 +980,15 @@ html, body {
 /* Position cell — "T150" needs smaller mono font; use ID scope to beat .leaderboard-table td.rank-cell */
 #field-view .rank-cell {
   font-family: 'DM Mono', monospace;
-  font-size: 13px;
+  font-size: 14px;
   color: var(--text-muted);
   letter-spacing: 0.04em;
   text-align: center;
+  transform: translateY(1px);
 }
+
+#field-view .pts-cell { transform: translateY(1px); }
+#field-view .score-cell { transform: translateY(1px); }
 
 /* Non-drafted rows have one line of text — flex shrink-wraps too short for centering.
    Revert to table-cell so vertical-align: middle shares the same row-height reference as rank-cell. */
@@ -1051,6 +1052,8 @@ html, body {
   .leaderboard-table td.score-cell    { padding: 10px 4px; }
   .leaderboard-table td.expand-cell   { padding: 0 8px 0 4px; }
   .leaderboard-table td.name-cell     { gap: 0; }
+
+  #field-view .rank-cell { font-size: 12px; }
 
   .score-primary { font-size: 24px; }
   .golfer-score  { font-size: 20px; width: 28px; }
