@@ -66,7 +66,7 @@ html, body {
 }
 
 .header-inner {
-  max-width: 1040px;
+  max-width: 840px;
   margin: 0 auto;
   padding: 0 20px;
   height: 56px;
@@ -156,7 +156,7 @@ html, body {
 }
 
 .banner-inner {
-  max-width: 1040px;
+  max-width: 840px;
   margin: 0 auto;
   padding: 16px 20px;
   display: flex;
@@ -212,7 +212,7 @@ html, body {
 ============================================================ */
 
 .leaderboard-wrap {
-  max-width: 1040px;
+  max-width: 840px;
   margin: 24px auto 16px;
   padding: 0 20px;
   /* Critical: contain width so inner content doesn't overflow page */
@@ -815,7 +815,7 @@ html, body {
 ============================================================ */
 
 .points-guide-container {
-  max-width: 1040px;
+  max-width: 840px;
   margin: 0 auto;
   padding: 0 20px;
   display: flex;
@@ -845,7 +845,7 @@ html, body {
 .points-guide-btn.lit { border-color: var(--accent); color: var(--accent); }
 
 .combined-toggle-container {
-  max-width: 1040px;
+  max-width: 840px;
   margin: 8px auto 0;
   padding: 0 20px;
   display: flex;
@@ -1008,7 +1008,7 @@ html, body {
 ============================================================ */
 
 .site-footer {
-  max-width: 1040px;
+  max-width: 840px;
   margin: 0 auto;
   padding: 20px;
   display: flex;
