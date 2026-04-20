@@ -125,7 +125,9 @@ const MANAGERS = [
         "Ben Griffin",
         "Akshay Bhatia",
       ],
-      pga_championship: [],
+      pga_championship: [
+        "Cameron Young",
+      ],
       us_open: [],
       the_open: [],
     },

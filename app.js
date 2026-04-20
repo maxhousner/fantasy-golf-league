@@ -26,6 +26,11 @@ const state = {
   sortBy:           "points", // "combined" | "bestball" | "points"
   cutLowestPlayer:  true,
   showCombined:     false,
+  activeView:             "fantasy", // "fantasy" | "field"
+  expandedFieldGolfers:   new Set(), // Set of golfer display name strings
+  expandedFieldPoints:    new Set(), // Set of golfer display name strings
+  fieldGolferPoints:      {},        // { "Scottie Scheffler": pointsObj, ... }
+  fieldSortBy:            "score",   // "pts" | "score"
 };
 
 // ============================================================
@@ -96,8 +101,9 @@ async function fetchScores() {
     return;
   }
 
-  state.playerScores = parseESPN(data);
-  state.leaderboard  = computeLeaderboard();
+  state.playerScores      = parseESPN(data);
+  state.fieldGolferPoints = computeFieldPoints();
+  state.leaderboard       = computeLeaderboard();
   state.lastUpdated  = new Date();
   state.error        = null;
   setLoading(false);
@@ -389,6 +395,30 @@ function calcPoints(golferNames, config = POINTS_CONFIG) {
 }
 
 // ============================================================
+//  FIELD HELPERS
+// ============================================================
+
+function computeFieldPoints() {
+  if (!Object.keys(state.playerScores).length) return {};
+  const allNames = Object.values(state.playerScores).map(g => g.name);
+  return calcPoints(allNames); // { "Scottie Scheffler": { grandTotal, ... }, ... }
+}
+
+function tournamentHasRosters() {
+  return MANAGERS.some(m => (m.golfers[ACTIVE_TOURNAMENT] ?? []).length > 0);
+}
+
+function getDraftedBy(golferName) {
+  const lc = golferName.trim().toLowerCase();
+  const drafted = [];
+  for (const manager of MANAGERS) {
+    const roster = manager.golfers[ACTIVE_TOURNAMENT] ?? [];
+    if (roster.some(n => n.trim().toLowerCase() === lc)) drafted.push(manager.name);
+  }
+  return drafted;
+}
+
+// ============================================================
 //  LEADERBOARD BUILDER
 // ============================================================
 
@@ -457,6 +487,7 @@ function assignRanks(results) {
 function render() {
   renderHeader();
   renderLeaderboard();
+  if (state.activeView === "field") renderFieldLeaderboard();
 }
 
 function renderHeader() {
@@ -665,6 +696,18 @@ function renderScorecard(rounds, opts) {
     <div class="hole-breakdown-title bb">Tap score for contributing players</div>`;
   }
 
+  if (opts.type === "field") {
+    const safeGolferName = opts.golferName.replace(/'/g, "\\'");
+    const isPointsExpanded = state.expandedFieldPoints.has(opts.golferName);
+    const ptsLabel = isPointsExpanded ? "Hide Points Breakdown" : "Show Points Breakdown";
+    html += `${renderRoundChips(opts.g.rounds)}
+    <div class="scorecard-btn-row">
+      <button class="scorecard-btn pts-toggle-btn ${isPointsExpanded ? "active" : ""}"
+        onclick="event.stopPropagation(); toggleFieldPointsBreakdown('${safeGolferName}')">${ptsLabel}</button>
+    </div>
+    ${isPointsExpanded && opts.gPts ? renderPointsBreakdown(opts.gPts) : ""}`;
+  }
+
   for (const round of rounds) {
     const front = [], back = [];
     for (let h = 1; h <= 18; h++) {
@@ -687,6 +730,10 @@ function renderScorecard(rounds, opts) {
       const result = state.leaderboard.find(r => r.manager.id === opts.managerId);
       const gPts = result?.golferPoints[opts.golferName];
       const roundPts = gPts?.perRoundPoints?.find(r => r.roundNum === round.roundNum)?.points ?? null;
+      const ptsDisplay = roundPts !== null ? `<span class="score-blue">${formatPoints(roundPts)}</span> / ` : "";
+      html += `<div class="scorecard-round-label">Round ${round.roundNum}: ${round.totalStrokes} / ${ptsDisplay}<span class="${scoreColorClass(round.toPar)}">${round.toParDisplay}</span></div>`;
+    } else if (opts.type === "field") {
+      const roundPts = opts.gPts?.perRoundPoints?.find(r => r.roundNum === round.roundNum)?.points ?? null;
       const ptsDisplay = roundPts !== null ? `<span class="score-blue">${formatPoints(roundPts)}</span> / ` : "";
       html += `<div class="scorecard-round-label">Round ${round.roundNum}: ${round.totalStrokes} / ${ptsDisplay}<span class="${scoreColorClass(round.toPar)}">${round.toParDisplay}</span></div>`;
     } else {
@@ -759,6 +806,121 @@ function playerInitials(fullName) {
   if (!fullName) return "";
   const parts = fullName.trim().split(/\s+/);
   return parts.length === 1 ? parts[0][0].toUpperCase() : (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+// ============================================================
+//  FIELD LEADERBOARD RENDER
+// ============================================================
+
+function renderFieldLeaderboard() {
+  const container = document.getElementById("field-body");
+  if (!container) return;
+
+  if (state.tournamentState === "pre") {
+    const t = TOURNAMENTS[ACTIVE_TOURNAMENT];
+    container.innerHTML = `<tr><td colspan="5" class="info-cell">Tournament Starts: ${formatDateDisplay(t.startDate)} | Draft: ${formatDateDisplay(t.startDate-4)}</td></tr>`;
+    return;
+  }
+
+  if (state.loading && !Object.keys(state.playerScores).length) {
+    container.innerHTML = `<tr><td colspan="5" class="loading-cell">Fetching field from ESPN…</td></tr>`;
+    return;
+  }
+
+  if (!Object.keys(state.playerScores).length) {
+    container.innerHTML = `<tr><td colspan="5" class="loading-cell">No field data available.</td></tr>`;
+    return;
+  }
+
+  document.querySelectorAll(".th-field-sortable").forEach(th => {
+    th.classList.toggle("sort-active", th.dataset.fieldSort === state.fieldSortBy);
+  });
+
+  const hasRosters = tournamentHasRosters();
+
+  const parsePos = p => {
+    if (!p.position || p.position === "--") return 9999;
+    return parseInt(String(p.position).replace("T", "")) || 9999;
+  };
+
+  const golfers = Object.values(state.playerScores).slice().sort((a, b) => {
+    if (a.missedCut !== b.missedCut) return a.missedCut ? 1 : -1;
+    if (state.fieldSortBy === "pts") {
+      const aPts = state.fieldGolferPoints[a.name]?.grandTotal ?? -Infinity;
+      const bPts = state.fieldGolferPoints[b.name]?.grandTotal ?? -Infinity;
+      const d = bPts - aPts;
+      return d !== 0 ? d : parsePos(a) - parsePos(b);
+    }
+    // "score" — sort by to-par, use ESPN position order to break ties
+    const d = a.overallToPar - b.overallToPar;
+    return d !== 0 ? d : parsePos(a) - parsePos(b);
+  });
+
+  let html = "";
+  for (const g of golfers) {
+    const isExpanded = state.expandedFieldGolfers.has(g.name);
+    const gPts      = state.fieldGolferPoints[g.name];
+    const cutBadge  = g.missedCut ? `<span class="cut-badge">MC</span>` : "";
+    const lastRound = g.rounds[g.rounds.length - 1];
+    const isPlaying = state.tournamentState === "live" && lastRound?.holes.length >= 1 && lastRound.holes.length < 18;
+    const safeKey   = g.name.replace(/'/g, "\\'");
+
+    let draftedHtml = "";
+    if (hasRosters) {
+      const drafted = getDraftedBy(g.name);
+      if (drafted.length > 0) draftedHtml = `<span class="team-name">${drafted.join(", ")}</span>`;
+    }
+
+    html += `
+      <tr class="manager-row ${isExpanded ? "expanded" : ""} ${g.missedCut ? "field-cut-row" : ""}"
+          onclick="toggleFieldGolfer('${safeKey}')">
+        <td class="rank-cell">${g.position}</td>
+        <td class="${draftedHtml ? "name-cell" : "name-cell field-name-single"}">
+          <span class="manager-name">${g.name}${cutBadge}${isPlaying ? `<span class="playing-dot" style="margin-left:4px">●</span>` : ""}</span>
+          ${draftedHtml}
+        </td>
+        <td class="pts-cell">
+          <span class="score-primary">${gPts ? formatPoints(gPts.grandTotal) : "--"}</span>
+        </td>
+        <td class="score-cell ${scoreColorClass(g.overallToPar)}">
+          <span class="score-primary">${g.overallToParDisplay}</span>
+        </td>
+        <td class="expand-cell">${isExpanded ? "▲" : "▼"}</td>
+      </tr>`;
+
+    if (isExpanded) {
+      html += `<tr class="detail-row"><td colspan="5"><div class="detail-panel">`;
+      html += renderScorecard(g.rounds, { type: "field", g, golferName: g.name, gPts });
+      html += `</div></td></tr>`;
+    }
+  }
+
+  container.innerHTML = html;
+}
+
+function toggleFieldView() {
+  const entering = state.activeView !== "field";
+  state.activeView = entering ? "field" : "fantasy";
+  document.getElementById("leaderboard-main").style.display          = entering ? "none" : "";
+  document.getElementById("field-view").style.display                = entering ? "" : "none";
+  document.getElementById("field-tab").classList.toggle("active", entering);
+  document.querySelector(".combined-toggle-container").style.display = entering ? "none" : "";
+  if (entering) renderFieldLeaderboard();
+}
+
+function toggleFieldGolfer(golferName) {
+  toggleSet(state.expandedFieldGolfers, golferName);
+  renderFieldLeaderboard();
+}
+
+function toggleFieldPointsBreakdown(golferName) {
+  toggleSet(state.expandedFieldPoints, golferName);
+  renderFieldLeaderboard();
+}
+
+function setFieldSortBy(col) {
+  state.fieldSortBy = col;
+  renderFieldLeaderboard();
 }
 
 // ============================================================
@@ -1059,6 +1221,10 @@ window.toggleBBHighlight      = toggleBBHighlight;
 window.togglePointsBreakdown  = togglePointsBreakdown;
 window.showBBPopup            = showBBPopup;
 window.setSortBy              = setSortBy;
-window.togglePointsGuide      = togglePointsGuide;
-window.toggleCutLowest        = toggleCutLowest;
-window.toggleCombined         = toggleCombined;
+window.togglePointsGuide         = togglePointsGuide;
+window.toggleCutLowest           = toggleCutLowest;
+window.toggleCombined            = toggleCombined;
+window.toggleFieldView            = toggleFieldView;
+window.toggleFieldGolfer          = toggleFieldGolfer;
+window.toggleFieldPointsBreakdown = toggleFieldPointsBreakdown;
+window.setFieldSortBy             = setFieldSortBy;

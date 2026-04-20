@@ -950,6 +950,59 @@ html, body {
 .pg-toggle-btn.active { background: rgba(96, 165, 250, 0.08); border-color: var(--accent); color: var(--accent); }
 
 /* ============================================================
+   FIELD VIEW
+============================================================ */
+
+/* Divider between tournament tabs and Field button */
+.nav-divider {
+  color: var(--border);
+  font-size: 14px;
+  line-height: 1;
+  align-self: center;
+  padding: 0 2px;
+  user-select: none;
+}
+
+/* Field tab gets a touch more left spacing via the divider; no other special style needed */
+.field-view-tab { /* inherits all .tourney-tab styles */ }
+
+/* Fix 1: remove detail-panel padding — scorecard fills flush to row edge */
+#field-view .detail-panel { padding: 0; }
+
+/* Fix 2: golfer names match the secondary tone used in manager detail rows */
+#field-view .manager-name { color: var(--text-secondary); }
+
+/* Fix 3: sortable field headers — mirrors .th-sortable behaviour */
+.th-field-sortable { cursor: pointer; user-select: none; }
+@media (hover: hover) {
+  .th-field-sortable:hover { color: var(--text-secondary); }
+}
+.th-field-sortable.sort-active { color: var(--accent); }
+.th-field-sortable.sort-active .sort-arrow { opacity: 1; }
+
+/* Position cell — "T150" needs smaller mono font; use ID scope to beat .leaderboard-table td.rank-cell */
+#field-view .rank-cell {
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+  text-align: center;
+}
+
+/* Non-drafted rows have one line of text — flex shrink-wraps too short for centering.
+   Revert to table-cell so vertical-align: middle shares the same row-height reference as rank-cell. */
+#field-view .field-name-single {
+  display: table-cell;
+  vertical-align: middle;
+}
+
+/* Remove top border on scorecard when it sits flush in the field view */
+#field-view .hole-breakdown { border-top: none; }
+
+/* Missed-cut rows dimmed in field view */
+.field-cut-row { opacity: 0.55; }
+
+/* ============================================================
    FOOTER
 ============================================================ */
 
@@ -992,6 +1045,7 @@ html, body {
   .leaderboard-table .th-short  { display: inline; }
 
   .leaderboard-table td            { padding: 10px 4px; }
+  .detail-row td                   { padding: 0; } /* re-assert over the td rule above */
   .leaderboard-table td.rank-cell     { font-size: 24px; }
   .leaderboard-table td.pts-cell      { padding: 10px 4px; font-size: 24px; }
   .leaderboard-table td.score-cell    { padding: 10px 4px; }

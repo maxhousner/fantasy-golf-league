@@ -45,16 +45,18 @@
         <p id="tournament-dates" class="tournament-dates"></p>
       </div>
       <div class="banner-nav">
-        <button class="tourney-tab" onclick="switchTournament('the_masters')">The Masters</button>
+        <button class="tourney-tab" onclick="switchTournament('the_masters')">Masters</button>
         <button class="tourney-tab" onclick="switchTournament('pga_championship')">PGA Champ</button>
         <button class="tourney-tab" onclick="switchTournament('us_open')">U.S. Open</button>
         <button class="tourney-tab" onclick="switchTournament('the_open')">The Open</button>
+        <span class="nav-divider">|</span>
+        <button class="tourney-tab field-view-tab" id="field-tab" onclick="toggleFieldView()">Field</button>
       </div>
     </div>
   </section>
 
   <!-- ========== LEADERBOARD ========== -->
-  <main class="leaderboard-wrap">
+  <main class="leaderboard-wrap" id="leaderboard-main">
     <table class="leaderboard-table">
       <thead>
         <tr>
@@ -79,6 +81,28 @@
       </tbody>
     </table>
   </main>
+
+  <!-- ========== FIELD VIEW ========== -->
+  <section class="leaderboard-wrap" id="field-view" style="display:none">
+    <table class="leaderboard-table">
+      <thead>
+        <tr>
+          <th class="th-rank">POS</th>
+          <th class="th-name">GOLFER</th>
+          <th class="th-pts th-field-sortable" data-field-sort="pts" onclick="setFieldSortBy('pts')">
+            <span class="th-long">POINTS</span><span class="th-short">PTS</span><span class="sort-arrow">▼</span>
+          </th>
+          <th class="th-score th-field-sortable sort-active" data-field-sort="score" onclick="setFieldSortBy('score')">
+            <span class="th-long">SCORE</span><span class="th-short">SCR</span><span class="sort-arrow">▼</span>
+          </th>
+          <th class="th-expand"></th>
+        </tr>
+      </thead>
+      <tbody id="field-body">
+        <tr><td colspan="5" class="loading-cell">Loading…</td></tr>
+      </tbody>
+    </table>
+  </section>
 
   <!-- ========== POINTS GUIDE ========== -->
   <div class="points-guide-container">
@@ -108,11 +132,22 @@
         btn.classList.toggle('active', keys[i] === key);
       });
       if (window.state) {
+        // Return to fantasy view if field was open
+        if (window.state.activeView === "field") {
+          window.state.activeView = "fantasy";
+          document.getElementById("leaderboard-main").style.display = "";
+          document.getElementById("field-view").style.display = "none";
+          document.getElementById("field-tab").classList.remove("active");
+          document.querySelector(".combined-toggle-container").style.display = "";
+        }
         window.state.expandedManagers.clear();
         window.state.expandedGolfers.clear();
         window.state.expandedBB.clear();
         window.state.bbHighlight.clear();
         window.state.expandedPoints.clear();
+        window.state.expandedFieldGolfers.clear();
+        window.state.expandedFieldPoints.clear();
+        window.state.fieldSortBy = "score";
       }
       fetchScores();
     }
