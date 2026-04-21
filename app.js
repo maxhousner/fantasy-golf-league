@@ -7,31 +7,64 @@ const ESPN_BASE  = "https://site.api.espn.com/apis/site/v2/sports/golf/pga/score
 const CORS_PROXY = "https://corsproxy.io/?url=";
 const REFRESH_MS = 120000; // 2 minutes
 
+// Canonical hole-type keys. Order mirrors POINTS_CONFIG.perHole.
+const HOLE_KEYS = ["doubleEagle", "eagle", "birdie", "par", "bogey", "double", "worse"];
+
 // ============================================================
 //  STATE
 // ============================================================
 
 const state = {
-  playerScores:     {},    // { "Player Name": parsedPlayerObject }
-  leaderboard:      [],    // computed manager results
-  lastUpdated:      null,
-  loading:          false,
-  error:            null,
-  tournamentState:  null,  // "pre" | "live" | "post"
-  expandedManagers: new Set(), // Set of managerId strings
-  expandedGolfers:  new Set(), // Set of "managerId|golferName" strings
-  expandedBB:       new Set(), // Set of managerId strings with BB panel open
-  bbHighlight:      new Set(), // Set of "managerId|golferName" strings
-  expandedPoints:   new Set(), // Set of "managerId|golferName" strings
-  sortBy:           "points", // "combined" | "bestball" | "points"
-  cutLowestPlayer:  true,
-  showCombined:     false,
-  activeView:             "fantasy", // "fantasy" | "field"
-  expandedFieldGolfers:   new Set(), // Set of golfer display name strings
-  expandedFieldPoints:    new Set(), // Set of golfer display name strings
-  fieldGolferPoints:      {},        // { "Scottie Scheffler": pointsObj, ... }
-  fieldSortBy:            "score",   // "pts" | "score"
+  playerScores: {},            // { [normalizedName]: playerObject } — keys normalized via normalizeName()
+  leaderboard: [],             // computed manager results
+  lastUpdated: null,
+  loading: false,
+  error: null,
+  tournamentState: null,       // "pre" | "live" | "post"
+  expandedManagers: new Set(), // managerId strings
+  expandedGolfers: new Set(),  // "managerId|golferName" strings
+  expandedBB: new Set(),       // managerId strings with BB panel open
+  bbHighlight: new Set(),      // "managerId|golferName" strings
+  expandedPoints: new Set(),   // "managerId|golferName" strings
+  sortBy: "points",            // "combined" | "bestball" | "points"
+  cutLowestPlayer: true,
+  showCombined: false,
+  activeView: "fantasy",       // "fantasy" | "field"
+  expandedFieldGolfers: new Set(),
+  expandedFieldPoints: new Set(),
+  fieldGolferPoints: {},       // { [normalizedName]: pointsObject } — scored once per fetch, shared by manager and field views
+  fieldSortBy: "score",        // "pts" | "score"
 };
+
+// ============================================================
+//  HELPERS
+// ============================================================
+
+const normalizeName = name => String(name ?? "").trim().toLowerCase();
+
+function getPlayer(name) { return state.playerScores[normalizeName(name)]; }
+function getPoints(name) { return state.fieldGolferPoints[normalizeName(name)]; }
+
+const zeroCounts = () => Object.fromEntries(HOLE_KEYS.map(k => [k, 0]));
+
+function classifyHole(toPar) {
+  if (toPar <= -3) return "doubleEagle";
+  if (toPar === -2) return "eagle";
+  if (toPar === -1) return "birdie";
+  if (toPar === 0)  return "par";
+  if (toPar === 1)  return "bogey";
+  if (toPar === 2)  return "double";
+  return "worse";
+}
+
+function deleteByPrefix(set, prefix) {
+  for (const key of [...set]) if (key.startsWith(prefix)) set.delete(key);
+}
+
+function toggleSet(set, key) {
+  if (set.has(key)) set.delete(key);
+  else set.add(key);
+}
 
 // ============================================================
 //  DATE HELPERS
@@ -39,7 +72,7 @@ const state = {
 
 function parseDate(yyyymmdd) {
   const s = String(yyyymmdd);
-  return new Date(parseInt(s.slice(0,4)), parseInt(s.slice(4,6)) - 1, parseInt(s.slice(6,8)));
+  return new Date(parseInt(s.slice(0, 4)), parseInt(s.slice(4, 6)) - 1, parseInt(s.slice(6, 8)));
 }
 
 function todayMidnight() {
@@ -49,6 +82,13 @@ function todayMidnight() {
 
 function formatDateDisplay(yyyymmdd) {
   return parseDate(yyyymmdd).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+}
+
+// Draft falls 4 days before the tournament start. Uses Date arithmetic so month/year rollovers are correct.
+function draftDateDisplay(startYyyymmdd) {
+  const d = parseDate(startYyyymmdd);
+  d.setDate(d.getDate() - 4);
+  return d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
 }
 
 // ============================================================
@@ -64,10 +104,6 @@ function getTournamentState(tournament) {
   return "live";
 }
 
-function buildUrl(tournament, tState) {
-  return tState === "post" ? `${ESPN_BASE}?dates=${tournament.endDate}` : ESPN_BASE;
-}
-
 // ============================================================
 //  FETCH
 // ============================================================
@@ -80,16 +116,17 @@ async function fetchScores() {
   state.tournamentState = tState;
 
   if (tState === "pre") {
-    state.playerScores = {};
-    state.leaderboard  = computeLeaderboard();
-    state.lastUpdated  = new Date();
-    state.error        = null;
+    state.playerScores      = {};
+    state.fieldGolferPoints = {};
+    state.leaderboard       = computeLeaderboard();
+    state.lastUpdated       = new Date();
+    state.error             = null;
     render();
     return;
   }
 
   setLoading(true);
-  const url = buildUrl(tournament, tState);
+  const url = tState === "post" ? `${ESPN_BASE}?dates=${tournament.endDate}` : ESPN_BASE;
   let data;
   try {
     let res = await fetch(url).catch(() => null);
@@ -102,10 +139,10 @@ async function fetchScores() {
   }
 
   state.playerScores      = parseESPN(data);
-  state.fieldGolferPoints = computeFieldPoints();
+  state.fieldGolferPoints = calcPoints();
   state.leaderboard       = computeLeaderboard();
-  state.lastUpdated  = new Date();
-  state.error        = null;
+  state.lastUpdated       = new Date();
+  state.error             = null;
   setLoading(false);
   render();
 }
@@ -115,7 +152,6 @@ async function fetchScores() {
 // ============================================================
 
 function parseESPN(data) {
-  const scores = {};
   const competitors = data?.events?.[0]?.competitions?.[0]?.competitors ?? [];
 
   const playerList = [];
@@ -123,19 +159,19 @@ function parseESPN(data) {
     const name = comp.athlete?.displayName;
     if (!name) continue;
     const rounds = parseRounds(comp.linescores ?? []);
-    const fourRoundToPar = rounds.reduce((s, r) => s + r.toPar, 0);
+    const overallToPar = rounds.reduce((s, r) => s + r.toPar, 0);
     playerList.push({
       name,
       order:               comp.order ?? 999,
       missedCut:           inferMissedCut(comp),
-      overallToPar:        fourRoundToPar,
-      overallToParDisplay: rounds.length > 0 ? formatToPar(fourRoundToPar) : (comp.score ?? "E"),
+      overallToPar,
+      overallToParDisplay: rounds.length > 0 ? formatToPar(overallToPar) : (comp.score ?? "E"),
       espnSortScore:       parseToParValue(comp.score ?? "E"), // includes playoff result, used only for position ranking
       rounds,
     });
   }
 
-  // Rank a sorted group, prefixing ties with "T"
+  // Rank a sorted group, prefixing ties with "T".
   function assignPositions(list, startRank) {
     let rank = startRank;
     for (let i = 0; i < list.length; ) {
@@ -149,18 +185,22 @@ function parseESPN(data) {
     }
   }
 
-  // Active and cut players ranked separately, each sorted by score then ESPN order
   const byScore = (a, b) => a.espnSortScore - b.espnSortScore || a.order - b.order;
   const active  = playerList.filter(p => !p.missedCut).sort(byScore);
   const cut     = playerList.filter(p =>  p.missedCut).sort(byScore);
 
   assignPositions(active, 1);
 
-  for (const player of active) {
-    scores[player.name.trim().toLowerCase()] = { name: player.name, position: player.position ?? "--", missedCut: player.missedCut, overallToPar: player.overallToPar, overallToParDisplay: player.overallToParDisplay, rounds: player.rounds };
-  }
-  for (const player of cut) {
-    scores[player.name.trim().toLowerCase()] = { name: player.name, position: "--", missedCut: player.missedCut, overallToPar: player.overallToPar, overallToParDisplay: player.overallToParDisplay, rounds: player.rounds };
+  const scores = {};
+  for (const player of [...active, ...cut]) {
+    scores[normalizeName(player.name)] = {
+      name:                player.name,
+      position:            player.missedCut ? "--" : (player.position ?? "--"),
+      missedCut:           player.missedCut,
+      overallToPar:        player.overallToPar,
+      overallToParDisplay: player.overallToParDisplay,
+      rounds:              player.rounds,
+    };
   }
   return scores;
 }
@@ -218,7 +258,7 @@ function inferMissedCut(comp) {
 function calcCombined(golferNames) {
   let total = 0, hasScore = false;
   for (const name of golferNames) {
-    const g = state.playerScores[name.trim().toLowerCase()];
+    const g = getPlayer(name);
     if (!g) continue;
     total += g.overallToPar;
     hasScore = true;
@@ -227,7 +267,7 @@ function calcCombined(golferNames) {
 }
 
 function calcBestBall(golferNames) {
-  const players = golferNames.map(n => state.playerScores[n.trim().toLowerCase()]).filter(Boolean);
+  const players = golferNames.map(getPlayer).filter(Boolean);
   if (!players.length) return { total: null, totalDisplay: "--", rounds: [] };
 
   const maxRound = Math.max(...players.map(p => p.rounds.length), 0);
@@ -288,42 +328,37 @@ function formatPoints(val) {
   return r % 1 === 0 ? String(r) : r.toFixed(1);
 }
 
-function getFinishPoints(position, config = POINTS_CONFIG) {
+function getFinishPoints(position) {
   if (!position || position === "--") return 0;
   const pos = parseInt(String(position).replace("T", ""));
   if (isNaN(pos)) return 0;
-  const range = config.finishPosition.find(r => pos >= r.min && pos <= r.max);
+  const range = POINTS_CONFIG.finishPosition.find(r => pos >= r.min && pos <= r.max);
   return range ? range.pts : 0;
 }
 
-function calcPoints(golferNames, config = POINTS_CONFIG) {
+// Scores every player in state.playerScores once. Returned map is keyed by normalizedName and is the single
+// source of truth consumed by both the manager leaderboard and the field view.
+function calcPoints() {
+  const cfg    = POINTS_CONFIG.perHole;
+  const bonus  = POINTS_CONFIG.bonuses;
   const result = {};
-  for (const name of golferNames) {
-    const g = state.playerScores[name.trim().toLowerCase()];
-    if (!g) continue;
 
-    const cfg = config.perHole;
-    const counts = { doubleEagle: 0, eagle: 0, birdie: 0, par: 0, bogey: 0, double: 0, worse: 0 };
+  for (const [key, g] of Object.entries(state.playerScores)) {
+    const counts = zeroCounts();
     let holeInOnes = 0, birdieStreaks = 0, bogeyFreeRounds = 0;
     const perRoundPoints = [];
 
     for (const round of g.rounds) {
-      const holes = [...round.holes].sort((a, b) => a.hole - b.hole);
-      const roundCounts = { doubleEagle: 0, eagle: 0, birdie: 0, par: 0, bogey: 0, double: 0, worse: 0 };
+      const roundCounts = zeroCounts();
       let roundHoleInOnes = 0, streak = 0, awardedThisRound = false, roundBirdieStreaks = 0;
 
-      for (const hole of holes) {
+      for (const hole of round.holes) {
         if (hole.strokes === 1) { holeInOnes++; roundHoleInOnes++; }
-        const tp = hole.toPar;
-        if      (tp <= -3)  { counts.doubleEagle++; roundCounts.doubleEagle++; }
-        else if (tp === -2) { counts.eagle++;       roundCounts.eagle++; }
-        else if (tp === -1) { counts.birdie++;      roundCounts.birdie++; }
-        else if (tp === 0)  { counts.par++;         roundCounts.par++; }
-        else if (tp === 1)  { counts.bogey++;       roundCounts.bogey++; }
-        else if (tp === 2)  { counts.double++;      roundCounts.double++; }
-        else                { counts.worse++;       roundCounts.worse++; }
+        const cls = classifyHole(hole.toPar);
+        counts[cls]++;
+        roundCounts[cls]++;
 
-        if (tp <= -1) {
+        if (hole.toPar <= -1) {
           streak++;
           if (streak >= 3 && !awardedThisRound) { birdieStreaks++; roundBirdieStreaks++; awardedThisRound = true; }
         } else {
@@ -331,64 +366,47 @@ function calcPoints(golferNames, config = POINTS_CONFIG) {
         }
       }
 
-      const roundBogeyFree = holes.length === 18 && holes.every(h => h.toPar <= 0);
+      const roundBogeyFree = round.holes.length === 18 && round.holes.every(h => h.toPar <= 0);
       if (roundBogeyFree) bogeyFreeRounds++;
 
-      const roundPerHole =
-        roundCounts.doubleEagle * cfg.doubleEagle +
-        roundCounts.eagle       * cfg.eagle +
-        roundCounts.birdie      * cfg.birdie +
-        roundCounts.par         * cfg.par +
-        roundCounts.bogey       * cfg.bogey +
-        roundCounts.double      * cfg.double +
-        roundCounts.worse       * cfg.worse;
-
+      const roundPerHole = HOLE_KEYS.reduce((s, k) => s + roundCounts[k] * cfg[k], 0);
       perRoundPoints.push({
         roundNum: round.roundNum,
-        points:   roundPerHole +
-                  roundBirdieStreaks   * config.bonuses.birdieStreak +
-                  (roundBogeyFree ? config.bonuses.bogeyFreeRound : 0) +
-                  roundHoleInOnes     * config.bonuses.holeInOne,
+        points:   roundPerHole
+                  + roundBirdieStreaks * bonus.birdieStreak
+                  + (roundBogeyFree ? bonus.bogeyFreeRound : 0)
+                  + roundHoleInOnes * bonus.holeInOne,
       });
     }
 
-    const perHolePoints = {
-      doubleEagle: counts.doubleEagle * cfg.doubleEagle,
-      eagle:       counts.eagle       * cfg.eagle,
-      birdie:      counts.birdie      * cfg.birdie,
-      par:         counts.par         * cfg.par,
-      bogey:       counts.bogey       * cfg.bogey,
-      double:      counts.double      * cfg.double,
-      worse:       counts.worse       * cfg.worse,
-    };
-    perHolePoints.total = perHolePoints.doubleEagle + perHolePoints.eagle + perHolePoints.birdie +
-      perHolePoints.par + perHolePoints.bogey + perHolePoints.double + perHolePoints.worse;
+    const perHolePoints = Object.fromEntries(HOLE_KEYS.map(k => [k, counts[k] * cfg[k]]));
+    perHolePoints.total = HOLE_KEYS.reduce((s, k) => s + perHolePoints[k], 0);
 
-    // Finish position — only after 4 complete rounds and not missed cut
-    const fourRoundsComplete = state.tournamentState === "post" ||
-      (g.rounds.length >= 4 && g.rounds[g.rounds.length - 1]?.holes.length === 18);
+    const fourRoundsComplete = state.tournamentState === "post"
+      || (g.rounds.length >= 4 && g.rounds[g.rounds.length - 1]?.holes.length === 18);
     const finishEligible = fourRoundsComplete && !g.missedCut;
-    const finishPts = finishEligible ? getFinishPoints(g.position, config) : 0;
+    const finishPts      = finishEligible ? getFinishPoints(g.position) : 0;
 
-    const allUnder70 = g.rounds.length >= 4 && !g.missedCut && g.rounds.every(r => r.holes.length === 18 && r.totalStrokes < 70);
+    const allUnder70 = g.rounds.length >= 4 && !g.missedCut
+      && g.rounds.every(r => r.holes.length === 18 && r.totalStrokes < 70);
 
     const bonusPoints = {
-      birdieStreaks:   birdieStreaks   * config.bonuses.birdieStreak,
-      bogeyFreeRounds: bogeyFreeRounds * config.bonuses.bogeyFreeRound,
-      allUnder70:      allUnder70      ? config.bonuses.allUnder70 : 0,
-      holeInOne:       holeInOnes      * config.bonuses.holeInOne,
+      birdieStreaks:   birdieStreaks   * bonus.birdieStreak,
+      bogeyFreeRounds: bogeyFreeRounds * bonus.bogeyFreeRound,
+      allUnder70:      allUnder70      ? bonus.allUnder70 : 0,
+      holeInOne:       holeInOnes      * bonus.holeInOne,
     };
-    bonusPoints.total = bonusPoints.birdieStreaks + bonusPoints.bogeyFreeRounds +
-      bonusPoints.allUnder70 + bonusPoints.holeInOne;
+    bonusPoints.total = bonusPoints.birdieStreaks + bonusPoints.bogeyFreeRounds
+      + bonusPoints.allUnder70 + bonusPoints.holeInOne;
 
-    result[name] = {
+    result[key] = {
       counts,
-      bonusCounts: { birdieStreaks, bogeyFreeRounds, allUnder70, holeInOne: holeInOnes },
+      bonusCounts:  { birdieStreaks, bogeyFreeRounds, allUnder70, holeInOne: holeInOnes },
       perHolePoints,
       finishPoints: { position: g.position, points: finishPts },
       bonusPoints,
       perRoundPoints,
-      grandTotal: perHolePoints.total + finishPts + bonusPoints.total,
+      grandTotal:   perHolePoints.total + finishPts + bonusPoints.total,
     };
   }
   return result;
@@ -398,22 +416,16 @@ function calcPoints(golferNames, config = POINTS_CONFIG) {
 //  FIELD HELPERS
 // ============================================================
 
-function computeFieldPoints() {
-  if (!Object.keys(state.playerScores).length) return {};
-  const allNames = Object.values(state.playerScores).map(g => g.name);
-  return calcPoints(allNames); // { "Scottie Scheffler": { grandTotal, ... }, ... }
-}
-
 function tournamentHasRosters() {
   return MANAGERS.some(m => (m.golfers[ACTIVE_TOURNAMENT] ?? []).length > 0);
 }
 
 function getDraftedBy(golferName) {
-  const lc = golferName.trim().toLowerCase();
+  const target = normalizeName(golferName);
   const drafted = [];
   for (const manager of MANAGERS) {
     const roster = manager.golfers[ACTIVE_TOURNAMENT] ?? [];
-    if (roster.some(n => n.trim().toLowerCase() === lc)) drafted.push(manager.name);
+    if (roster.some(n => normalizeName(n) === target)) drafted.push(manager.name);
   }
   return drafted;
 }
@@ -425,7 +437,13 @@ function getDraftedBy(golferName) {
 function computeLeaderboard() {
   const results = MANAGERS.map(manager => {
     const golferNames = manager.golfers[ACTIVE_TOURNAMENT] ?? [];
-    const golferPoints = calcPoints(golferNames);
+
+    // Re-key per-manager: roster-name → pointsObject, by looking up the shared fieldGolferPoints map.
+    const golferPoints = {};
+    for (const name of golferNames) {
+      const pts = state.fieldGolferPoints[normalizeName(name)];
+      if (pts) golferPoints[name] = pts;
+    }
     const scoredNames = golferNames.filter(n => golferPoints[n]);
 
     let cutPlayerName = null;
@@ -435,11 +453,20 @@ function computeLeaderboard() {
       );
     }
 
+    // teamPoints: manager total after dropping the cutPlayer (if that toggle is on). Null while pre-tournament.
     const teamPoints = golferNames.length > 0 && state.tournamentState !== "pre"
       ? scoredNames.filter(n => n !== cutPlayerName).reduce((s, n) => s + golferPoints[n].grandTotal, 0)
       : null;
 
-    return { manager, golferNames, combined: calcCombined(golferNames), bestBall: calcBestBall(golferNames), golferPoints, teamPoints, cutPlayerName };
+    return {
+      manager,
+      golferNames,
+      combined: calcCombined(golferNames),
+      bestBall: calcBestBall(golferNames),
+      golferPoints,
+      teamPoints,
+      cutPlayerName,
+    };
   });
   sortLeaderboard(results);
   assignRanks(results);
@@ -470,7 +497,7 @@ function assignRanks(results) {
   for (let i = 0; i < results.length; i++) {
     if (!results[i].golferNames.length) { results[i].rank = "--"; continue; }
     if (i > 0) {
-      const p = results[i-1], c = results[i];
+      const p = results[i - 1], c = results[i];
       const tied = state.sortBy === "points"
         ? p.teamPoints === c.teamPoints
         : p.combined.total === c.combined.total && p.bestBall.total === c.bestBall.total;
@@ -530,7 +557,7 @@ function renderLeaderboard() {
 
   if (state.tournamentState === "pre") {
     const t = TOURNAMENTS[ACTIVE_TOURNAMENT];
-    html += `<tr><td colspan="${colspan}" class="info-cell">Tournament Starts: ${formatDateDisplay(t.startDate)} | Draft: ${formatDateDisplay(t.startDate-4)}</td></tr>`;
+    html += `<tr><td colspan="${colspan}" class="info-cell">Tournament Starts: ${formatDateDisplay(t.startDate)} | Draft: ${draftDateDisplay(t.startDate)}</td></tr>`;
   }
   if (state.error) {
     html += `<tr><td colspan="${colspan}" class="error-cell" style="padding:8px 20px;">${state.error}</td></tr>`;
@@ -541,8 +568,8 @@ function renderLeaderboard() {
     const isExpanded = state.expandedManagers.has(result.manager.id);
     const hasRoster  = result.golferNames.length > 0;
     const hasScores  = result.combined.total !== null;
-
     const hasTeamPoints = result.teamPoints !== null;
+
     html += `
       <tr class="manager-row ${isExpanded ? "expanded" : ""} ${!hasRoster ? "no-roster" : ""}"
           data-rank="${result.rank}"
@@ -569,9 +596,9 @@ function renderLeaderboard() {
       html += `<div class="detail-section-label">Roster</div>`;
       html += `<div class="golfer-list">`;
 
-      for (const name of result.golferNames) {
-        const g    = state.playerScores[name.trim().toLowerCase()];
-        const gKey = `${result.manager.id}|${name}`;
+      for (const golferName of result.golferNames) {
+        const g    = getPlayer(golferName);
+        const gKey = `${result.manager.id}|${golferName}`;
         const isGolferExpanded = state.expandedGolfers.has(gKey);
         const bbOn = state.bbHighlight.has(gKey);
 
@@ -581,7 +608,7 @@ function renderLeaderboard() {
             <div class="golfer-list-item ${isPre ? "" : "not-found"}">
               <div class="golfer-list-main no-cursor">
                 <div class="golfer-list-left">
-                  <span class="golfer-name">${name}</span>
+                  <span class="golfer-name">${golferName}</span>
                 </div>
                 <span class="golfer-score">${isPre ? "--" : "N/A"}</span>
               </div>
@@ -589,20 +616,22 @@ function renderLeaderboard() {
           continue;
         }
 
-        const cutBadge = g.missedCut ? `<span class="cut-badge">MC</span>` : "";
-        const gPts = result.golferPoints[name];
+        const cutBadge  = g.missedCut ? `<span class="cut-badge">MC</span>` : "";
+        const gPts      = result.golferPoints[golferName];
         const lastRound = g.rounds[g.rounds.length - 1];
         const isPlaying = state.tournamentState === "live" && lastRound?.holes.length >= 1 && lastRound.holes.length < 18;
+        const safeName  = golferName.replace(/'/g, "\\'");
+
         html += `
           <div class="golfer-list-item ${g.missedCut ? "cut" : ""} ${isGolferExpanded ? "expanded" : ""}">
             <div class="golfer-list-main"
-                 onclick="toggleGolfer('${result.manager.id}', '${name.replace(/'/g, "\\'")}')">
+                 onclick="toggleGolfer('${result.manager.id}', '${safeName}')">
               <div class="golfer-list-left">
-                <span class="golfer-name">${name}${cutBadge}</span>
+                <span class="golfer-name">${golferName}${cutBadge}</span>
                 <span class="golfer-position">${g.position}</span>${isPlaying ? `<span class="playing-dot">●</span>` : ""}
               </div>
               <div class="golfer-list-right">
-                ${gPts ? `<span class="golfer-pts ${name === result.cutPlayerName ? "pts-cut" : ""}">${formatPoints(gPts.grandTotal)}</span>` : ""}
+                ${gPts ? `<span class="golfer-pts ${golferName === result.cutPlayerName ? "pts-cut" : ""}">${formatPoints(gPts.grandTotal)}</span>` : ""}
                 <span class="golfer-score ${scoreColorClass(g.overallToPar)}">${g.overallToParDisplay}</span>
                 <span class="golfer-expand-chevron">${isGolferExpanded ? "▲" : "▼"}</span>
               </div>
@@ -610,7 +639,7 @@ function renderLeaderboard() {
 
         if (isGolferExpanded) {
           html += renderScorecard(g.rounds, {
-            type: "player", g, managerId: result.manager.id, golferName: name, bbHighlightOn: bbOn,
+            type: "player", g, managerId: result.manager.id, golferName, bbHighlightOn: bbOn,
           });
         }
 
@@ -657,10 +686,19 @@ function renderRoundChips(rounds) {
   }</div>`;
 }
 
+// Builds the round-header label shared by player and field scorecards.
+function renderScorecardRoundLabel(round, roundPts) {
+  const ptsDisplay = roundPts !== null && roundPts !== undefined
+    ? `<span class="score-blue">${formatPoints(roundPts)}</span> / `
+    : "";
+  return `<div class="scorecard-round-label">Round ${round.roundNum}: ${round.totalStrokes} / ${ptsDisplay}<span class="${scoreColorClass(round.toPar)}">${round.toParDisplay}</span></div>`;
+}
+
 // Unified scorecard renderer for player hole-by-hole and best ball breakdown.
-// opts.type = "player" | "bestball"
-// "player" opts: g, managerId, golferName, bbHighlightOn
+// opts.type = "player" | "bestball" | "field"
+// "player"   opts: g, managerId, golferName, bbHighlightOn
 // "bestball" opts: (just rounds passed in, holes use .bestStrokes + .bestPlayers)
+// "field"    opts: g, golferName, gPts
 function renderScorecard(rounds, opts) {
   if (!rounds.length) return "";
 
@@ -677,16 +715,16 @@ function renderScorecard(rounds, opts) {
       }
     }
     const gPts = result?.golferPoints[opts.golferName];
-    const safeGolferName = opts.golferName.replace(/'/g, "\\'");
+    const safeName = opts.golferName.replace(/'/g, "\\'");
     const isPointsExpanded = state.expandedPoints.has(`${opts.managerId}|${opts.golferName}`);
-    const bbLabel  = opts.bbHighlightOn  ? "Hide BB Holes" : "Show BB Holes";
-    const ptsLabel = isPointsExpanded    ? "Hide Points Breakdown" : "Show Points Breakdown";
+    const bbLabel  = opts.bbHighlightOn ? "Hide BB Holes" : "Show BB Holes";
+    const ptsLabel = isPointsExpanded   ? "Hide Points Breakdown" : "Show Points Breakdown";
     html += `${renderRoundChips(opts.g.rounds)}
     <div class="scorecard-btn-row">
       <button class="scorecard-btn pts-toggle-btn ${isPointsExpanded ? "active" : ""}"
-        onclick="event.stopPropagation(); togglePointsBreakdown('${opts.managerId}', '${safeGolferName}')">${ptsLabel}</button>
+        onclick="event.stopPropagation(); togglePointsBreakdown('${opts.managerId}', '${safeName}')">${ptsLabel}</button>
       <button class="scorecard-btn bb-toggle-btn ${opts.bbHighlightOn ? "active" : ""}"
-        onclick="event.stopPropagation(); toggleBBHighlight('${opts.managerId}', '${safeGolferName}')">${bbLabel}</button>
+        onclick="event.stopPropagation(); toggleBBHighlight('${opts.managerId}', '${safeName}')">${bbLabel}</button>
     </div>
     ${isPointsExpanded && gPts ? renderPointsBreakdown(gPts) : ""}`;
   }
@@ -697,13 +735,13 @@ function renderScorecard(rounds, opts) {
   }
 
   if (opts.type === "field") {
-    const safeGolferName = opts.golferName.replace(/'/g, "\\'");
+    const safeName = opts.golferName.replace(/'/g, "\\'");
     const isPointsExpanded = state.expandedFieldPoints.has(opts.golferName);
     const ptsLabel = isPointsExpanded ? "Hide Points Breakdown" : "Show Points Breakdown";
     html += `${renderRoundChips(opts.g.rounds)}
     <div class="scorecard-btn-row">
       <button class="scorecard-btn pts-toggle-btn ${isPointsExpanded ? "active" : ""}"
-        onclick="event.stopPropagation(); toggleFieldPointsBreakdown('${safeGolferName}')">${ptsLabel}</button>
+        onclick="event.stopPropagation(); toggleFieldPointsBreakdown('${safeName}')">${ptsLabel}</button>
     </div>
     ${isPointsExpanded && opts.gPts ? renderPointsBreakdown(opts.gPts) : ""}`;
   }
@@ -715,10 +753,10 @@ function renderScorecard(rounds, opts) {
       (h <= 9 ? front : back).push({ h, hData });
     }
 
-    const strokeKey   = opts.type === "bestball" ? "bestStrokes" : "strokes";
-    const sumStrokes  = arr => arr.reduce((s, { hData }) => s + (hData?.[strokeKey] ?? 0), 0);
-    const sumPar      = arr => arr.reduce((s, { hData }) => s + (hData?.par ?? 0), 0);
-    const allPlayed   = arr => arr.every(({ hData }) => hData !== null);
+    const strokeKey  = opts.type === "bestball" ? "bestStrokes" : "strokes";
+    const sumStrokes = arr => arr.reduce((s, { hData }) => s + (hData?.[strokeKey] ?? 0), 0);
+    const sumPar     = arr => arr.reduce((s, { hData }) => s + (hData?.par ?? 0), 0);
+    const allPlayed  = arr => arr.every(({ hData }) => hData !== null);
 
     const frontStrokes = sumStrokes(front), backStrokes = sumStrokes(back);
     const frontPar = sumPar(front), backPar = sumPar(back);
@@ -727,17 +765,15 @@ function renderScorecard(rounds, opts) {
 
     html += `<div class="scorecard-round">`;
     if (opts.type === "player") {
-      const result = state.leaderboard.find(r => r.manager.id === opts.managerId);
-      const gPts = result?.golferPoints[opts.golferName];
+      const result   = state.leaderboard.find(r => r.manager.id === opts.managerId);
+      const gPts     = result?.golferPoints[opts.golferName];
       const roundPts = gPts?.perRoundPoints?.find(r => r.roundNum === round.roundNum)?.points ?? null;
-      const ptsDisplay = roundPts !== null ? `<span class="score-blue">${formatPoints(roundPts)}</span> / ` : "";
-      html += `<div class="scorecard-round-label">Round ${round.roundNum}: ${round.totalStrokes} / ${ptsDisplay}<span class="${scoreColorClass(round.toPar)}">${round.toParDisplay}</span></div>`;
+      html += renderScorecardRoundLabel(round, roundPts);
     } else if (opts.type === "field") {
       const roundPts = opts.gPts?.perRoundPoints?.find(r => r.roundNum === round.roundNum)?.points ?? null;
-      const ptsDisplay = roundPts !== null ? `<span class="score-blue">${formatPoints(roundPts)}</span> / ` : "";
-      html += `<div class="scorecard-round-label">Round ${round.roundNum}: ${round.totalStrokes} / ${ptsDisplay}<span class="${scoreColorClass(round.toPar)}">${round.toParDisplay}</span></div>`;
+      html += renderScorecardRoundLabel(round, roundPts);
     } else {
-      html += `<div class="scorecard-round-label">Round ${round.roundNum}: ${round.totalStrokes} / <span class="${scoreColorClass(round.toPar)}">${round.toParDisplay}</span></div>`;
+      html += renderScorecardRoundLabel(round, null);
     }
     html += `<div class="scorecard-scroll-wrap"><table class="scorecard-table">`;
 
@@ -818,7 +854,7 @@ function renderFieldLeaderboard() {
 
   if (state.tournamentState === "pre") {
     const t = TOURNAMENTS[ACTIVE_TOURNAMENT];
-    container.innerHTML = `<tr><td colspan="5" class="info-cell">Tournament Starts: ${formatDateDisplay(t.startDate)} | Draft: ${formatDateDisplay(t.startDate-4)}</td></tr>`;
+    container.innerHTML = `<tr><td colspan="5" class="info-cell">Tournament Starts: ${formatDateDisplay(t.startDate)} | Draft: ${draftDateDisplay(t.startDate)}</td></tr>`;
     return;
   }
 
@@ -846,8 +882,8 @@ function renderFieldLeaderboard() {
   const golfers = Object.values(state.playerScores).slice().sort((a, b) => {
     if (a.missedCut !== b.missedCut) return a.missedCut ? 1 : -1;
     if (state.fieldSortBy === "pts") {
-      const aPts = state.fieldGolferPoints[a.name]?.grandTotal ?? -Infinity;
-      const bPts = state.fieldGolferPoints[b.name]?.grandTotal ?? -Infinity;
+      const aPts = getPoints(a.name)?.grandTotal ?? -Infinity;
+      const bPts = getPoints(b.name)?.grandTotal ?? -Infinity;
       const d = bPts - aPts;
       return d !== 0 ? d : parsePos(a) - parsePos(b);
     }
@@ -859,11 +895,11 @@ function renderFieldLeaderboard() {
   let html = "";
   for (const g of golfers) {
     const isExpanded = state.expandedFieldGolfers.has(g.name);
-    const gPts      = state.fieldGolferPoints[g.name];
-    const cutBadge  = g.missedCut ? `<span class="cut-badge">MC</span>` : "";
-    const lastRound = g.rounds[g.rounds.length - 1];
-    const isPlaying = state.tournamentState === "live" && lastRound?.holes.length >= 1 && lastRound.holes.length < 18;
-    const safeKey   = g.name.replace(/'/g, "\\'");
+    const gPts       = getPoints(g.name);
+    const cutBadge   = g.missedCut ? `<span class="cut-badge">MC</span>` : "";
+    const lastRound  = g.rounds[g.rounds.length - 1];
+    const isPlaying  = state.tournamentState === "live" && lastRound?.holes.length >= 1 && lastRound.holes.length < 18;
+    const safeName   = g.name.replace(/'/g, "\\'");
 
     let draftedHtml = "";
     if (hasRosters) {
@@ -873,7 +909,7 @@ function renderFieldLeaderboard() {
 
     html += `
       <tr class="manager-row ${isExpanded ? "expanded" : ""} ${g.missedCut ? "field-cut-row" : ""}"
-          onclick="toggleFieldGolfer('${safeKey}')">
+          onclick="toggleFieldGolfer('${safeName}')">
         <td class="rank-cell">${g.position}</td>
         <td class="${draftedHtml ? "name-cell" : "name-cell field-name-single"}">
           <span class="manager-name">${g.name}${cutBadge}${isPlaying ? `<span class="playing-dot" style="margin-left:4px">●</span>` : ""}</span>
@@ -927,20 +963,15 @@ function setFieldSortBy(col) {
 //  UI HELPERS
 // ============================================================
 
-function toggleSet(set, key) {
-  if (set.has(key)) set.delete(key);
-  else set.add(key);
-}
-
 function scoreColorClass(val) {
-  if (val == null) return "";
-  if (val < 0)     return "score-under";
-  if (val === 0)   return "score-even";
+  if (val == null)  return "";
+  if (val < 0)      return "score-under";
+  if (val === 0)    return "score-even";
   return "score-over";
 }
 
 function holeColorClass(toPar) {
-  if (toPar <= -2) return "hole-eagle";
+  if (toPar <= -2)  return "hole-eagle";
   if (toPar === -1) return "hole-birdie";
   if (toPar === 0)  return "hole-par";
   if (toPar === 1)  return "hole-bogey";
@@ -954,7 +985,7 @@ function setLoading(val) {
   const ind = document.getElementById("loading-indicator");
   if (ind) {
     ind.style.transition = val ? "opacity 0.1s ease" : "opacity 1s ease";
-    ind.style.opacity = val ? "1" : "0";
+    ind.style.opacity    = val ? "1" : "0";
   }
 }
 
@@ -967,15 +998,9 @@ function setError(msg) {
 function toggleManager(managerId) {
   if (state.expandedManagers.has(managerId)) {
     state.expandedManagers.delete(managerId);
-    for (const key of [...state.expandedGolfers]) {
-      if (key.startsWith(managerId + "|")) state.expandedGolfers.delete(key);
-    }
-    for (const key of [...state.bbHighlight]) {
-      if (key.startsWith(managerId + "|")) state.bbHighlight.delete(key);
-    }
-    for (const key of [...state.expandedPoints]) {
-      if (key.startsWith(managerId + "|")) state.expandedPoints.delete(key);
-    }
+    deleteByPrefix(state.expandedGolfers, managerId + "|");
+    deleteByPrefix(state.bbHighlight,     managerId + "|");
+    deleteByPrefix(state.expandedPoints,  managerId + "|");
     state.expandedBB.delete(managerId);
   } else {
     state.expandedManagers.add(managerId);
@@ -1110,14 +1135,14 @@ function buildPointsGuide() {
     const v = n % 100;
     if (v >= 11 && v <= 13) return `${n}th`;
     switch (n % 10) {
-      case 1: return `${n}st`;
-      case 2: return `${n}nd`;
-      case 3: return `${n}rd`;
+      case 1:  return `${n}st`;
+      case 2:  return `${n}nd`;
+      case 3:  return `${n}rd`;
       default: return `${n}th`;
     }
   }
 
-  function ptSign(val) { return val > 0 ? `+${val}` : `${val}`; }
+  const ptSign = val => val > 0 ? `+${val}` : `${val}`;
 
   const perHoleRows = Object.entries(POINTS_CONFIG.perHole).map(([key, val]) =>
     `<tr><td class="pg-label">${perHoleLabels[key] ?? key}</td><td class="pg-value">${ptSign(val)}</td></tr>`
@@ -1197,34 +1222,71 @@ function toggleCombined() {
 }
 
 // ============================================================
+//  TOURNAMENT TAB SWITCHING
+// ============================================================
+
+function switchTournament(key) {
+  if (!TOURNAMENTS[key]) return;
+  ACTIVE_TOURNAMENT = key;
+  highlightActiveTab();
+
+  // Return to fantasy view if field was open
+  if (state.activeView === "field") {
+    state.activeView = "fantasy";
+    document.getElementById("leaderboard-main").style.display          = "";
+    document.getElementById("field-view").style.display                = "none";
+    document.getElementById("field-tab").classList.remove("active");
+    document.querySelector(".combined-toggle-container").style.display = "";
+  }
+
+  state.expandedManagers.clear();
+  state.expandedGolfers.clear();
+  state.expandedBB.clear();
+  state.bbHighlight.clear();
+  state.expandedPoints.clear();
+  state.expandedFieldGolfers.clear();
+  state.expandedFieldPoints.clear();
+  state.fieldSortBy = "score";
+
+  fetchScores();
+}
+
+function highlightActiveTab() {
+  document.querySelectorAll(".tourney-tab[data-key]").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.key === ACTIVE_TOURNAMENT);
+  });
+}
+
+// ============================================================
 //  BOOTSTRAP
 // ============================================================
 
 async function init() {
   renderHeader();
   buildPointsGuide();
+  highlightActiveTab();
   await fetchScores();
   setInterval(fetchScores, REFRESH_MS);
   document.getElementById("refresh-btn")?.addEventListener("click", fetchScores);
-
 }
 
 document.addEventListener("DOMContentLoaded", init);
 
-// Expose globals needed by index.html
-window.state             = state;
-window.fetchScores       = fetchScores;
-window.toggleManager     = toggleManager;
-window.toggleGolfer      = toggleGolfer;
-window.toggleBBExpand    = toggleBBExpand;
-window.toggleBBHighlight      = toggleBBHighlight;
-window.togglePointsBreakdown  = togglePointsBreakdown;
-window.showBBPopup            = showBBPopup;
-window.setSortBy              = setSortBy;
-window.togglePointsGuide         = togglePointsGuide;
-window.toggleCutLowest           = toggleCutLowest;
-window.toggleCombined            = toggleCombined;
+// Expose globals needed by inline onclick handlers in index.html / rendered markup.
+window.state                      = state;
+window.fetchScores                = fetchScores;
+window.toggleManager              = toggleManager;
+window.toggleGolfer               = toggleGolfer;
+window.toggleBBExpand             = toggleBBExpand;
+window.toggleBBHighlight          = toggleBBHighlight;
+window.togglePointsBreakdown      = togglePointsBreakdown;
+window.showBBPopup                = showBBPopup;
+window.setSortBy                  = setSortBy;
+window.togglePointsGuide          = togglePointsGuide;
+window.toggleCutLowest            = toggleCutLowest;
+window.toggleCombined             = toggleCombined;
 window.toggleFieldView            = toggleFieldView;
 window.toggleFieldGolfer          = toggleFieldGolfer;
 window.toggleFieldPointsBreakdown = toggleFieldPointsBreakdown;
 window.setFieldSortBy             = setFieldSortBy;
+window.switchTournament           = switchTournament;

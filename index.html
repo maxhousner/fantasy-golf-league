@@ -45,10 +45,10 @@
         <p id="tournament-dates" class="tournament-dates"></p>
       </div>
       <div class="banner-nav">
-        <button class="tourney-tab" onclick="switchTournament('the_masters')">Masters</button>
-        <button class="tourney-tab" onclick="switchTournament('pga_championship')">PGA Champ</button>
-        <button class="tourney-tab" onclick="switchTournament('us_open')">U.S. Open</button>
-        <button class="tourney-tab" onclick="switchTournament('the_open')">The Open</button>
+        <button class="tourney-tab" data-key="the_masters"      onclick="switchTournament('the_masters')">Masters</button>
+        <button class="tourney-tab" data-key="pga_championship" onclick="switchTournament('pga_championship')">PGA Champ</button>
+        <button class="tourney-tab" data-key="us_open"          onclick="switchTournament('us_open')">U.S. Open</button>
+        <button class="tourney-tab" data-key="the_open"         onclick="switchTournament('the_open')">The Open</button>
         <span class="nav-divider">|</span>
         <button class="tourney-tab field-view-tab" id="field-tab" onclick="toggleFieldView()">Field</button>
       </div>
@@ -123,42 +123,6 @@
 
   <script src="data.js"></script>
   <script src="app.js"></script>
-
-  <script>
-    function switchTournament(key) {
-      ACTIVE_TOURNAMENT = key;
-      document.querySelectorAll('.tourney-tab').forEach((btn, i) => {
-        const keys = ['the_masters', 'pga_championship', 'us_open', 'the_open'];
-        btn.classList.toggle('active', keys[i] === key);
-      });
-      if (window.state) {
-        // Return to fantasy view if field was open
-        if (window.state.activeView === "field") {
-          window.state.activeView = "fantasy";
-          document.getElementById("leaderboard-main").style.display = "";
-          document.getElementById("field-view").style.display = "none";
-          document.getElementById("field-tab").classList.remove("active");
-          document.querySelector(".combined-toggle-container").style.display = "";
-        }
-        window.state.expandedManagers.clear();
-        window.state.expandedGolfers.clear();
-        window.state.expandedBB.clear();
-        window.state.bbHighlight.clear();
-        window.state.expandedPoints.clear();
-        window.state.expandedFieldGolfers.clear();
-        window.state.expandedFieldPoints.clear();
-        window.state.fieldSortBy = "score";
-      }
-      fetchScores();
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-      document.querySelectorAll('.tourney-tab').forEach((btn, i) => {
-        const keys = ['the_masters', 'pga_championship', 'us_open', 'the_open'];
-        btn.classList.toggle('active', keys[i] === ACTIVE_TOURNAMENT);
-      });
-    });
-  </script>
 
 </body>
 </html>

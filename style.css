@@ -54,6 +54,28 @@ html, body {
 }
 
 /* ============================================================
+   SHARED BUTTON BASE
+   Six button classes (refresh, tourney-tab, points-guide,
+   combined-toggle, scorecard, pg-toggle) share these six
+   declarations. Individual rules below add size, font, and
+   color accents only.
+============================================================ */
+
+.refresh-btn,
+.tourney-tab,
+.points-guide-btn,
+.combined-toggle-btn,
+.scorecard-btn,
+.pg-toggle-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* ============================================================
    HEADER
 ============================================================ */
 
@@ -124,18 +146,12 @@ html, body {
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  background: transparent;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
   color: var(--text-secondary);
   font-family: 'DM Sans', sans-serif;
   font-size: 12px;
   font-weight: 500;
-  cursor: pointer;
-  /* No :hover transition on touch — handled via @media hover */
   letter-spacing: 0.03em;
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
+  /* No :hover transition on touch — handled via @media hover */
 }
 
 /* Only apply hover styles on devices that support true hover (not touch) */
@@ -188,17 +204,11 @@ html, body {
 
 .tourney-tab {
   padding: 6px 14px;
-  background: transparent;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
   color: var(--text-secondary);
   font-family: 'DM Sans', sans-serif;
   font-size: 13px;
   font-weight: 500;
-  cursor: pointer;
   letter-spacing: 0.03em;
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
 }
 
 @media (hover: hover) {
@@ -589,17 +599,11 @@ html, body {
 /* Shared base for scorecard action buttons */
 .scorecard-btn {
   padding: 4px 6px;
-  background: transparent;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
   color: var(--text-secondary);
   font-family: 'DM Mono', monospace;
   font-size: 9px;
   letter-spacing: 0.06em;
-  cursor: pointer;
   text-transform: uppercase;
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
 }
 
 /* BB highlight toggle */
@@ -628,7 +632,7 @@ html, body {
   border-collapse: collapse;
 }
 
-.pts-breakdown-table td { padding: 4px 8px; border-bottom: none; }      
+.pts-breakdown-table td { padding: 4px 8px; border-bottom: none; }
 .pts-bd-label,
 .pts-bd-value {
   font-family: 'DM Mono', monospace;
@@ -825,17 +829,11 @@ html, body {
 
 .points-guide-btn {
   padding: 6px 14px;
-  background: transparent;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
   color: var(--text-muted);
   font-family: 'DM Sans', sans-serif;
   font-size: 12px;
   font-weight: 500;
-  cursor: pointer;
   letter-spacing: 0.03em;
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
 }
 
 @media (hover: hover) {
@@ -854,17 +852,11 @@ html, body {
 
 .combined-toggle-btn {
   padding: 6px 14px;
-  background: transparent;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
   color: var(--text-muted);
   font-family: 'DM Sans', sans-serif;
   font-size: 12px;
   font-weight: 500;
-  cursor: pointer;
   letter-spacing: 0.03em;
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
 }
 
 @media (hover: hover) {
@@ -929,18 +921,12 @@ html, body {
 .pg-toggle-btn {
   width: 100%;
   padding: 5px 8px;
-  background: transparent;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
   color: var(--text-secondary);
   font-family: 'DM Mono', monospace;
   font-size: 10px;
   letter-spacing: 0.06em;
-  cursor: pointer;
   text-transform: uppercase;
   text-align: left;
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
 }
 
 @media (hover: hover) {
@@ -977,7 +963,9 @@ html, body {
 .th-field-sortable.sort-active { color: var(--accent); }
 .th-field-sortable.sort-active .sort-arrow { opacity: 1; }
 
-/* Position cell — "T150" needs smaller mono font; use ID scope to beat .leaderboard-table td.rank-cell */
+/* Position cell — "T150" needs smaller mono font; use ID scope to beat .leaderboard-table td.rank-cell.
+   The translateY(1px) on rank/pts/score cells compensates for a 1px baseline drift between DM Mono
+   (rank) and Bebas Neue (pts/score) vs. the flex-centered .name-cell. Keep all three in lockstep. */
 #field-view .rank-cell {
   font-family: 'DM Mono', monospace;
   font-size: 14px;
@@ -987,7 +975,7 @@ html, body {
   transform: translateY(1px);
 }
 
-#field-view .pts-cell { transform: translateY(1px); }
+#field-view .pts-cell   { transform: translateY(1px); }
 #field-view .score-cell { transform: translateY(1px); }
 
 /* Non-drafted rows have one line of text — flex shrink-wraps too short for centering.
@@ -1026,7 +1014,7 @@ html, body {
 ============================================================ */
 
 @media (max-width: 720px) {
-  .brand-full, .brand-season { display: none; }  
+  .brand-full, .brand-season { display: none; }
 }
 
 @media (max-width: 640px) {
