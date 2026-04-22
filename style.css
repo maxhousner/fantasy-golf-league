@@ -400,6 +400,21 @@ html, body {
   max-width: 100%;
 }
 
+@keyframes spga-expand-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.detail-panel.animating,
+.hole-breakdown.animating {
+  animation: spga-expand-in 180ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .detail-panel.animating,
+  .hole-breakdown.animating { animation: none; }
+}
+
 .detail-section-label {
   font-family: 'DM Mono', monospace;
   font-size: 10px;

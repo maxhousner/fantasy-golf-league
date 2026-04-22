@@ -35,6 +35,7 @@ const state = {
   fieldGolferPoints: {},       // { [normalizedName]: pointsObject } — scored once per fetch, shared by manager and field views
   fieldSortBy: "score",        // "pts" | "score"
   autoExpandedFor: null,       // tournament key that pre-tournament rosters have been auto-expanded for; reset on tab switch
+  animatingExpand: new Set(),  // keys to play the expand animation once on next render; cleared at end of render()
 };
 
 // ============================================================
@@ -523,6 +524,7 @@ function render() {
   renderHeader();
   renderLeaderboard();
   if (state.activeView === "field") renderFieldLeaderboard();
+  state.animatingExpand.clear();
 }
 
 function renderHeader() {
@@ -600,7 +602,8 @@ function renderLeaderboard() {
       </tr>`;
 
     if (isExpanded && hasRoster) {
-      html += `<tr class="detail-row"><td colspan="${colspan}"><div class="detail-panel">`;
+      const animMgr = state.animatingExpand.has(`mgr:${result.manager.id}`) ? " animating" : "";
+      html += `<tr class="detail-row"><td colspan="${colspan}"><div class="detail-panel${animMgr}">`;
       html += `<div class="detail-section-label">Roster</div>`;
       html += `<div class="golfer-list">`;
 
@@ -648,6 +651,7 @@ function renderLeaderboard() {
         if (isGolferExpanded) {
           html += renderScorecard(g.rounds, {
             type: "player", g, managerId: result.manager.id, golferName, bbHighlightOn: bbOn,
+            animating: state.animatingExpand.has(`gfr:${gKey}`),
           });
         }
 
@@ -671,7 +675,10 @@ function renderLeaderboard() {
             </div>
           </div>`;
         if (bbExpanded) {
-          html += renderScorecard(result.bestBall.rounds, { type: "bestball" });
+          html += renderScorecard(result.bestBall.rounds, {
+            type: "bestball",
+            animating: state.animatingExpand.has(`bb:${result.manager.id}`),
+          });
         }
         html += `</div></div>`; // golfer-list-item, bb-section
       }
@@ -711,7 +718,7 @@ function renderScorecard(rounds, opts) {
   if (!rounds.length) return "";
 
   const bbContribMap = {};
-  let html = `<div class="hole-breakdown">`;
+  let html = `<div class="hole-breakdown${opts.animating ? " animating" : ""}">`;
 
   if (opts.type === "player") {
     const result = state.leaderboard.find(r => r.manager.id === opts.managerId);
@@ -933,7 +940,8 @@ function renderFieldLeaderboard() {
       </tr>`;
 
     if (isExpanded) {
-      html += `<tr class="detail-row"><td colspan="5"><div class="detail-panel">`;
+      const animFld = state.animatingExpand.has(`fld:${g.name}`) ? " animating" : "";
+      html += `<tr class="detail-row"><td colspan="5"><div class="detail-panel${animFld}">`;
       html += renderScorecard(g.rounds, { type: "field", g, golferName: g.name, gPts });
       html += `</div></td></tr>`;
     }
@@ -954,7 +962,9 @@ function toggleFieldView() {
 
 function toggleFieldGolfer(golferName) {
   toggleSet(state.expandedFieldGolfers, golferName);
+  if (state.expandedFieldGolfers.has(golferName)) state.animatingExpand.add(`fld:${golferName}`);
   renderFieldLeaderboard();
+  state.animatingExpand.clear();
 }
 
 function toggleFieldPointsBreakdown(golferName) {
@@ -1012,6 +1022,7 @@ function toggleManager(managerId) {
     state.expandedBB.delete(managerId);
   } else {
     state.expandedManagers.add(managerId);
+    state.animatingExpand.add(`mgr:${managerId}`);
   }
   render();
 }
@@ -1023,12 +1034,14 @@ function toggleGolfer(managerId, golferName) {
     state.bbHighlight.delete(key);
   } else {
     state.expandedGolfers.add(key);
+    state.animatingExpand.add(`gfr:${key}`);
   }
   render();
 }
 
 function toggleBBExpand(managerId) {
   toggleSet(state.expandedBB, managerId);
+  if (state.expandedBB.has(managerId)) state.animatingExpand.add(`bb:${managerId}`);
   render();
 }
 
