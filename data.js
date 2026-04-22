@@ -76,6 +76,7 @@ const TOURNAMENTS = {
     location: "Augusta National Golf Club, Augusta, GA",
     startDate: "20260409",
     endDate: "20260412",
+    draftDate: "20260405",
   },
   pga_championship: {
     name: "PGA Championship",
@@ -84,6 +85,7 @@ const TOURNAMENTS = {
     location: "Aronimink Golf Club, Newtown Square, PA",
     startDate: "20260514",
     endDate: "20260517",
+    draftDate: "20260510",
   },
   us_open: {
     name: "U.S. Open",
@@ -92,6 +94,7 @@ const TOURNAMENTS = {
     location: "Shinnecock Hills Golf Club, Southampton, NY",
     startDate: "20260618",
     endDate: "20260621",
+    draftDate: "20260614",
   },
   the_open: {
     name: "The Open Championship",
@@ -100,6 +103,7 @@ const TOURNAMENTS = {
     location: "Royal Birkdale Golf Club, Southport, England",
     startDate: "20260716",
     endDate: "20260719",
+    draftDate: "20260712",
   },
 };
 

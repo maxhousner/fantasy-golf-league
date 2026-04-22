@@ -84,9 +84,10 @@ function formatDateDisplay(yyyymmdd) {
   return parseDate(yyyymmdd).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
 }
 
-// Draft falls 4 days before the tournament start. Uses Date arithmetic so month/year rollovers are correct.
-function draftDateDisplay(startYyyymmdd) {
-  const d = parseDate(startYyyymmdd);
+// Prefers tournament.draftDate; falls back to 4 days before startDate via Date arithmetic.
+function draftDateDisplay(tournament) {
+  if (tournament.draftDate) return formatDateDisplay(tournament.draftDate);
+  const d = parseDate(tournament.startDate);
   d.setDate(d.getDate() - 4);
   return d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
 }
@@ -557,7 +558,7 @@ function renderLeaderboard() {
 
   if (state.tournamentState === "pre") {
     const t = TOURNAMENTS[ACTIVE_TOURNAMENT];
-    html += `<tr><td colspan="${colspan}" class="info-cell">Tournament Starts: ${formatDateDisplay(t.startDate)} | Draft: ${draftDateDisplay(t.startDate)}</td></tr>`;
+    html += `<tr><td colspan="${colspan}" class="info-cell">Tournament Starts: ${formatDateDisplay(t.startDate)} | Draft: ${draftDateDisplay(t)}</td></tr>`;
   }
   if (state.error) {
     html += `<tr><td colspan="${colspan}" class="error-cell" style="padding:8px 20px;">${state.error}</td></tr>`;
@@ -854,7 +855,7 @@ function renderFieldLeaderboard() {
 
   if (state.tournamentState === "pre") {
     const t = TOURNAMENTS[ACTIVE_TOURNAMENT];
-    container.innerHTML = `<tr><td colspan="5" class="info-cell">Tournament Starts: ${formatDateDisplay(t.startDate)} | Draft: ${draftDateDisplay(t.startDate)}</td></tr>`;
+    container.innerHTML = `<tr><td colspan="5" class="info-cell">Tournament Starts: ${formatDateDisplay(t.startDate)} | Draft: ${draftDateDisplay(t)}</td></tr>`;
     return;
   }
 
