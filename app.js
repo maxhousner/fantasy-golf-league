@@ -34,6 +34,7 @@ const state = {
   expandedFieldPoints: new Set(),
   fieldGolferPoints: {},       // { [normalizedName]: pointsObject } — scored once per fetch, shared by manager and field views
   fieldSortBy: "score",        // "pts" | "score"
+  autoExpandedFor: null,       // tournament key that pre-tournament rosters have been auto-expanded for; reset on tab switch
 };
 
 // ============================================================
@@ -119,6 +120,12 @@ async function fetchScores() {
   if (tState === "pre") {
     state.playerScores      = {};
     state.fieldGolferPoints = {};
+    if (state.autoExpandedFor !== ACTIVE_TOURNAMENT) {
+      for (const m of MANAGERS) {
+        if ((m.golfers[ACTIVE_TOURNAMENT] ?? []).length > 0) state.expandedManagers.add(m.id);
+      }
+      state.autoExpandedFor = ACTIVE_TOURNAMENT;
+    }
     state.leaderboard       = computeLeaderboard();
     state.lastUpdated       = new Date();
     state.error             = null;
@@ -1248,6 +1255,7 @@ function switchTournament(key) {
   state.expandedFieldGolfers.clear();
   state.expandedFieldPoints.clear();
   state.fieldSortBy = "score";
+  state.autoExpandedFor = null;
 
   fetchScores();
 }
