@@ -1235,6 +1235,7 @@ function toggleCombined() {
   state.showCombined = !state.showCombined;
   if (!state.showCombined && state.sortBy === "combined") {
     state.sortBy = "points";
+    state.leaderboard = computeLeaderboard();
   }
   const btn = document.getElementById("combined-toggle-btn");
   if (btn) btn.textContent = state.showCombined ? "Hide Combined Scores" : "Show Combined Scores";

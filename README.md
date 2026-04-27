@@ -2,8 +2,6 @@
 
 Fantasy golf league dashboard for the Sub-Par Golf Association (me and my friends). Tracks live and historical scores across the four majors, computes per-hole points and bonuses for each manager's roster, and renders a sortable leaderboard alongside a full tournament field view.
 
----
-
 ## How It Works
 
 - Fetches live and historical scoreboard data from the ESPN API (CORS proxy fallback for local dev)
@@ -14,8 +12,6 @@ Fantasy golf league dashboard for the Sub-Par Golf Association (me and my friend
 
 Currently supports the four majors only. Rosters are set manually in `data.js`.
 
----
-
 ## Files
 
 | File | Purpose |
@@ -24,8 +20,6 @@ Currently supports the four majors only. Rosters are set manually in `data.js`.
 | `app.js` | ESPN API fetch, score parsing, leaderboard and field computation, all UI rendering |
 | `index.html` | Static shell — tournament banner, fantasy leaderboard, field view, points guide, nav tabs |
 | `style.css` | All styles; mobile breakpoints at 640px and 720px |
-
----
 
 ## Scoring
 
