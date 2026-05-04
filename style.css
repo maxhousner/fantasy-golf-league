@@ -47,7 +47,7 @@
   --bg-surface:   #ffffff;
   --bg-row:       #ffffff;
   --bg-detail:    #f3f5f7;
-  --bg-card:      #e8ebef;
+  --bg-card:      #d8dce2;
 
   --border:       #c5cad1;
   --border-soft:  #dde1e6;
@@ -76,7 +76,7 @@
 :root[data-theme="light"] .golfer-list-item.cut,
 :root[data-theme="light"] .field-cut-row {
   opacity: 1;
-  background: #dde0e5;
+  background: #e8ebef;
 }
 :root[data-theme="light"] .sc-score-cell.hole-par {
   background: #f3f5f7;
