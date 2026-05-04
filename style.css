@@ -43,11 +43,11 @@
 
 /* Light palette — applied when [data-theme="light"] is set on <html>. */
 :root[data-theme="light"] {
-  --bg:           #e5e8ec;
-  --bg-surface:   #ffffff;
-  --bg-row:       #ffffff;
-  --bg-detail:    #f3f5f7;
-  --bg-card:      #e8ebef;
+  --bg:           #dde0e5;
+  --bg-surface:   #ebeef2;
+  --bg-row:       #f0f3f7;
+  --bg-detail:    #e3e6eb;
+  --bg-card:      #f8fafb;
 
   --border:       #c5cad1;
   --border-soft:  #dde1e6;
@@ -56,10 +56,10 @@
   --text-secondary: #4e5258;
   --text-muted:     #6b7178;
 
-  --green:       #15803d;
+  --green:       #2a8a52;
   --green-dim:   #86efac;
   --green-deep:  #dcfce7;
-  --red:         #b91c1c;
+  --red:         #c54545;
   --red-dim:     #fca5a5;
   --red-deep:    #fee2e2;
   --amber:       #b45309;
@@ -67,19 +67,7 @@
   --purple:      #7c3aed;
   --purple-deep: #ede9fe;
 
-  --accent:      #2563eb;
-}
-
-/* Light-mode-only refinements:
-   - missed-cut rows get a darker bg (opacity dim is too subtle on white)
-   - par scorecard cells get a near-white bg (was using --bg-card, too heavy) */
-:root[data-theme="light"] .golfer-list-item.cut,
-:root[data-theme="light"] .field-cut-row {
-  opacity: 0.7;
-  background: #dde0e5;
-}
-:root[data-theme="light"] .sc-score-cell.hole-par {
-  background: #f3f5f7;
+  --accent:      #4a78d4;
 }
 
 html, body {
@@ -488,6 +476,13 @@ html, body {
 .golfer-list-item.cut         { opacity: 0.6; }
 .golfer-list-item.not-found   { opacity: 0.5; }
 .golfer-list-item.expanded    { background: var(--bg-card); }
+
+/* Cut rows dim everything via opacity, which mutes the hover/expanded bg.
+   Restore full opacity when the row is engaged so the state reads clearly. */
+.golfer-list-item.cut.expanded { opacity: 1; }
+@media (hover: hover) {
+  .golfer-list-item.cut:has(.golfer-list-main:hover) { opacity: 1; }
+}
 
 .bb-section {
   margin-top: 12px;
@@ -1112,7 +1107,9 @@ html, body {
   .team-name    { font-size: 11px; }
 
   .banner-inner { padding: 10px 12px; gap: 10px; }
-  .tourney-tab  { font-size: 11px; padding: 5px 8px; }
+  .banner-nav   { gap: 4px; width: 100%; }
+  .tourney-tab  { font-size: 11px; padding: 4px 6px; flex: 1 1 auto; }
+  .nav-divider  { padding: 0 1px; }
   .tournament-loc, .tournament-dates { font-size: 12px; }
   .detail-panel { padding: 10px 10px 16px; }
 
@@ -1141,3 +1138,4 @@ html, body {
   .pg-inner { gap: 10px; padding: 12px; }
   .pg-table td { padding: 3px 6px; font-size: 10px; }
 }
+

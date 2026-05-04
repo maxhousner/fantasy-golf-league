@@ -567,7 +567,7 @@ function renderLeaderboard() {
 
   if (state.tournamentState === "pre") {
     const t = TOURNAMENTS[ACTIVE_TOURNAMENT];
-    html += `<tr><td colspan="${colspan}" class="info-cell">Tournament Starts: ${formatDateDisplay(t.startDate)} | Draft: ${draftDateDisplay(t)}</td></tr>`;
+    html += `<tr><td colspan="${colspan}" class="info-cell"><div>Tournament Starts: ${formatDateDisplay(t.startDate)}</div><div>Draft: ${draftDateDisplay(t)}</div></td></tr>`;
   }
   if (state.error) {
     html += `<tr><td colspan="${colspan}" class="error-cell" style="padding:8px 20px;">${state.error}</td></tr>`;
@@ -869,7 +869,7 @@ function renderFieldLeaderboard() {
 
   if (state.tournamentState === "pre") {
     const t = TOURNAMENTS[ACTIVE_TOURNAMENT];
-    container.innerHTML = `<tr><td colspan="5" class="info-cell">Tournament Starts: ${formatDateDisplay(t.startDate)} | Draft: ${draftDateDisplay(t)}</td></tr>`;
+    container.innerHTML = `<tr><td colspan="5" class="info-cell"><div>Tournament Starts: ${formatDateDisplay(t.startDate)}</div><div>Draft: ${draftDateDisplay(t)}</div></td></tr>`;
     return;
   }
 
