@@ -18,17 +18,17 @@
   --border-soft:  #20242a;
 
   --text-primary:   #e8ebe6;
-  --text-secondary: #888d96;
-  --text-muted:     #4e5258;
+  --text-secondary: #a4a9b2;
+  --text-muted:     #6b7178;
 
   --green:       #4ade80;
   --green-dim:   #22543d;
-  --green-deep:  #0a1f12;
+  --green-deep:  #0f2a1a;
   --red:         #f87171;
   --red-dim:     #5c1f1f;
-  --red-deep:    #1f0a0a;
+  --red-deep:    #2a0f0f;
   --amber:      #fbbf24;
-  --amber-deep: #1f1200;
+  --amber-deep: #2a1a00;
   --purple:      #c084fc;
   --purple-deep: #1a0a30;
 
@@ -39,6 +39,47 @@
   --accent:    #60a5fa;
   --radius:    4px;
   --radius-lg: 8px;
+}
+
+/* Light palette — applied when [data-theme="light"] is set on <html>. */
+:root[data-theme="light"] {
+  --bg:           #e5e8ec;
+  --bg-surface:   #ffffff;
+  --bg-row:       #ffffff;
+  --bg-detail:    #f3f5f7;
+  --bg-card:      #e8ebef;
+
+  --border:       #c5cad1;
+  --border-soft:  #dde1e6;
+
+  --text-primary:   #1a1d22;
+  --text-secondary: #4e5258;
+  --text-muted:     #6b7178;
+
+  --green:       #15803d;
+  --green-dim:   #86efac;
+  --green-deep:  #dcfce7;
+  --red:         #b91c1c;
+  --red-dim:     #fca5a5;
+  --red-deep:    #fee2e2;
+  --amber:       #b45309;
+  --amber-deep:  #fef3c7;
+  --purple:      #7c3aed;
+  --purple-deep: #ede9fe;
+
+  --accent:      #2563eb;
+}
+
+/* Light-mode-only refinements:
+   - missed-cut rows get a darker bg (opacity dim is too subtle on white)
+   - par scorecard cells get a near-white bg (was using --bg-card, too heavy) */
+:root[data-theme="light"] .golfer-list-item.cut,
+:root[data-theme="light"] .field-cut-row {
+  opacity: 1;
+  background: #dde0e5;
+}
+:root[data-theme="light"] .sc-score-cell.hole-par {
+  background: #f3f5f7;
 }
 
 html, body {
@@ -1037,6 +1078,11 @@ html, body {
   .header-brand   { gap: 0; }
   .header-actions { gap: 8px; }
   .brand-abbr     { font-size: 22px; }
+
+  /* Icon-only refresh button on mobile */
+  .refresh-label  { display: none; }
+  #refresh-btn,
+  #theme-toggle-btn { padding: 6px 8px; gap: 0; }
 
   .leaderboard-wrap { padding: 0 10px; margin-top: 14px; }
 

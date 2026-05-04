@@ -1284,7 +1284,42 @@ function highlightActiveTab() {
 //  BOOTSTRAP
 // ============================================================
 
+// ============================================================
+//  THEME TOGGLE
+//  Binary light/dark, persisted in localStorage. Initial state
+//  is set by the inline <head> script in index.html (which falls
+//  back to prefers-color-scheme on first visit).
+// ============================================================
+
+const THEME_KEY = "spga-theme";
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute("data-theme", theme);
+  const sun  = document.getElementById("theme-icon-sun");
+  const moon = document.getElementById("theme-icon-moon");
+  if (sun && moon) {
+    sun.style.display  = theme === "light" ? "" : "none";
+    moon.style.display = theme === "dark"  ? "" : "none";
+  }
+}
+
+function currentTheme() {
+  return document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark";
+}
+
+function toggleTheme() {
+  const next = currentTheme() === "dark" ? "light" : "dark";
+  localStorage.setItem(THEME_KEY, next);
+  applyTheme(next);
+}
+
+function initTheme() {
+  applyTheme(currentTheme());
+  document.getElementById("theme-toggle-btn")?.addEventListener("click", toggleTheme);
+}
+
 async function init() {
+  initTheme();
   renderHeader();
   buildPointsGuide();
   highlightActiveTab();

@@ -7,6 +7,15 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <script>
+    (function () {
+      var t = localStorage.getItem("spga-theme");
+      if (t !== "light" && t !== "dark") {
+        t = window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+      }
+      document.documentElement.setAttribute("data-theme", t);
+    })();
+  </script>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -30,7 +39,16 @@
             <path d="M1 12v-4h4"/>
             <path d="M11.5 5A5 5 0 1 0 12 9"/>
           </svg>
-          Refresh
+          <span class="refresh-label">Refresh</span>
+        </button>
+        <button id="theme-toggle-btn" class="refresh-btn theme-toggle-btn" title="Toggle theme" ontouchstart="">
+          <svg id="theme-icon-sun" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+            <circle cx="7" cy="7" r="2.5"/>
+            <path d="M7 1v1.5M7 11.5V13M1 7h1.5M11.5 7H13M2.5 2.5l1 1M10.5 10.5l1 1M2.5 11.5l1-1M10.5 3.5l1-1"/>
+          </svg>
+          <svg id="theme-icon-moon" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+            <path d="M12 8.5A5 5 0 0 1 5.5 2 5 5 0 1 0 12 8.5z"/>
+          </svg>
         </button>
       </div>
     </div>
