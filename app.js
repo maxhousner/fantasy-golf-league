@@ -600,7 +600,7 @@ function renderLeaderboard() {
         ${state.showCombined ? `<td class="score-cell ${hasScores ? scoreColorClass(result.combined.total) : ""}">
           <span class="score-primary">${result.combined.totalDisplay}</span>
         </td>` : ""}
-        <td class="expand-cell">${hasRoster ? (isExpanded ? "▲" : "▼") : ""}</td>
+        <td class="expand-cell">${hasRoster ? `<span class="expand-caret">▼</span>` : ""}</td>
       </tr>`;
 
     if (isExpanded && hasRoster) {
@@ -646,7 +646,7 @@ function renderLeaderboard() {
               <div class="golfer-list-right">
                 ${gPts ? `<span class="golfer-pts ${golferName === result.cutPlayerName ? "pts-cut" : ""}">${formatPoints(gPts.grandTotal)}</span>` : ""}
                 <span class="golfer-score ${scoreColorClass(g.overallToPar)}">${g.overallToParDisplay}</span>
-                <span class="golfer-expand-chevron">${isGolferExpanded ? "▲" : "▼"}</span>
+                <span class="golfer-expand-chevron">▼</span>
               </div>
             </div>`;
 
@@ -673,7 +673,7 @@ function renderLeaderboard() {
             </div>
             <div class="golfer-list-right">
               <span class="golfer-score ${scoreColorClass(result.bestBall.total)}">${result.bestBall.totalDisplay}</span>
-              <span class="golfer-expand-chevron">${bbExpanded ? "▲" : "▼"}</span>
+              <span class="golfer-expand-chevron">▼</span>
             </div>
           </div>`;
         if (bbExpanded) {
@@ -938,7 +938,7 @@ function renderFieldLeaderboard() {
         <td class="score-cell ${scoreColorClass(g.overallToPar)}">
           <span class="score-primary">${g.overallToParDisplay}</span>
         </td>
-        <td class="expand-cell">${isExpanded ? "▲" : "▼"}</td>
+        <td class="expand-cell"><span class="expand-caret">▼</span></td>
       </tr>`;
 
     if (isExpanded) {

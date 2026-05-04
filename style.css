@@ -260,7 +260,8 @@ html, body {
 
 .leaderboard-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   overflow: hidden;
@@ -270,7 +271,6 @@ html, body {
 
 .leaderboard-table thead tr {
   background: var(--bg-row);
-  border-bottom: 1px solid var(--border);
 }
 
 .leaderboard-table th {
@@ -284,6 +284,8 @@ html, body {
   text-transform: uppercase;
   white-space: nowrap;
   overflow: hidden;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-row);
 }
 
 .leaderboard-table .th-rank   { width: 44px; text-align: center; }
@@ -303,16 +305,18 @@ html, body {
 /* Manager rows */
 .manager-row {
   background: var(--bg-row);
-  border-bottom: 1px solid var(--border-soft);
   cursor: pointer;
   transition: background 0.1s;
 }
+.manager-row td { border-bottom: 1px solid var(--border-soft); }
+.leaderboard-table tbody tr:last-child td { border-bottom: none; }
 
 @media (hover: hover) {
   .manager-row:hover { background: var(--bg-card); }
 }
 
-.manager-row.expanded  { background: var(--bg-card); border-bottom-color: transparent; }
+.manager-row.expanded  { background: var(--bg-card); }
+.manager-row.expanded td { border-bottom-color: transparent; }
 .manager-row.no-roster { opacity: 0.5; cursor: default; }
 
 /* Constrain all td padding; detail-row overrides below */
@@ -528,6 +532,19 @@ html, body {
   font-size: 10px;
   color: var(--text-muted);
   flex-shrink: 0;
+  display: inline-block;
+  transition: transform 200ms ease;
+}
+.golfer-list-item.expanded .golfer-expand-chevron {
+  transform: rotate(180deg);
+}
+
+.expand-caret {
+  display: inline-block;
+  transition: transform 200ms ease;
+}
+.manager-row.expanded .expand-caret {
+  transform: rotate(180deg);
 }
 
 /* Player name & position — always on one line, truncate if too long */
