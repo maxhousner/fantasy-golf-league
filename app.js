@@ -161,7 +161,10 @@ async function fetchScores() {
 // ============================================================
 
 function parseESPN(data) {
-  const competitors = data?.events?.[0]?.competitions?.[0]?.competitors ?? [];
+  const competition  = data?.events?.[0]?.competitions?.[0];
+  const competitors  = competition?.competitors ?? [];
+  const currentRound = competition?.status?.period ?? 0;
+  const tourneyDone  = competition?.status?.type?.completed === true;
 
   const playerList = [];
   for (const comp of competitors) {
@@ -172,7 +175,7 @@ function parseESPN(data) {
     playerList.push({
       name,
       order:               comp.order ?? 999,
-      missedCut:           inferMissedCut(comp),
+      missedCut:           inferMissedCut(comp, currentRound, tourneyDone),
       overallToPar,
       overallToParDisplay: rounds.length > 0 ? formatToPar(overallToPar) : (comp.score ?? "E"),
       espnSortScore:       parseToParValue(comp.score ?? "E"), // includes playoff result, used only for position ranking
@@ -251,13 +254,12 @@ function parseToParValue(str) {
   return isNaN(n) ? 0 : n;
 }
 
-function inferMissedCut(comp) {
+function inferMissedCut(comp, currentRound, tourneyDone) {
   const ls = comp.linescores ?? [];
   const withHoles = ls.filter(r => r.linescores?.length > 0 && !(r.displayValue === "-" && r.value === 0));
   if (withHoles.length !== 2) return false;
-  if (ls.some(r => r.period === 4)) return false;
-  const r3 = ls.find(r => r.period === 3);
-  return r3 !== undefined && "value" in r3 && (r3.linescores?.length ?? 0) === 0;
+  if (withHoles.some(r => r.period >= 3)) return false;
+  return tourneyDone || currentRound >= 3;
 }
 
 // ============================================================
