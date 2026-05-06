@@ -976,7 +976,7 @@ function renderFieldLeaderboard() {
       <tr class="manager-row ${isExpanded ? "expanded" : ""} ${g.missedCut ? "field-cut-row" : ""}"
           data-action="toggle-field-golfer"
           data-golfer-name="${golferAttr}">
-        <td class="rank-cell">${escapeHtml(g.position)}</td>
+        <td class="rank-cell"><span class="field-baseline">${escapeHtml(g.position)}</span></td>
         <td class="${draftedHtml ? "name-cell" : "name-cell field-name-single"}">
           <span class="manager-name">${escapeHtml(g.name)}${cutBadge}${isPlaying ? `<span class="playing-dot" style="margin-left:4px">●</span>` : ""}</span>
           ${draftedHtml}

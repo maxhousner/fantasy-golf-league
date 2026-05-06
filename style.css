@@ -1035,20 +1035,24 @@ html, body {
 .th-field-sortable.sort-active { color: var(--accent); }
 .th-field-sortable.sort-active .sort-arrow { opacity: 1; }
 
-/* Position cell — "T150" needs smaller mono font; use ID scope to beat .leaderboard-table td.rank-cell.
-   The translateY(1px) on rank/pts/score cells compensates for a 1px baseline drift between DM Mono
-   (rank) and Bebas Neue (pts/score) vs. the flex-centered .name-cell. Keep all three in lockstep. */
+/* Position cell — "T150" needs smaller mono font; use ID scope to beat .leaderboard-table td.rank-cell. */
 #field-view .rank-cell {
   font-family: 'DM Mono', monospace;
   font-size: 14px;
   color: var(--text-muted);
   letter-spacing: 0.04em;
   text-align: center;
-  transform: translateY(1px);
 }
 
-#field-view .pts-cell   { transform: translateY(1px); }
-#field-view .score-cell { transform: translateY(1px); }
+/* The translateY(1px) compensates for a 1px baseline drift between DM Mono (rank) and Bebas Neue
+   (pts/score) vs. the flex-centered .name-cell. Apply to the inner content, not the <td>, so the
+   cell's bottom border doesn't shift with it (which would segment the row dividers). */
+#field-view .rank-cell .field-baseline {
+  display: inline-block;
+  transform: translateY(1px);
+}
+#field-view .pts-cell .score-primary,
+#field-view .score-cell .score-primary { transform: translateY(1px); }
 
 /* Non-drafted rows have one line of text — flex shrink-wraps too short for centering.
    Revert to table-cell so vertical-align: middle shares the same row-height reference as rank-cell. */
