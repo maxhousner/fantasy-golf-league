@@ -29,8 +29,10 @@
   --red-deep:    #2a0f0f;
   --amber:      #fbbf24;
   --amber-deep: #2a1a00;
-  --purple:      #c084fc;
-  --purple-deep: #1a0a30;
+  --teal:        #2dd4bf;
+  --teal-deep:   #052e2b;
+  --rust:        #ea580c;
+  --rust-deep:   #2a1208;
 
   --gold:   #f0c040;
   --silver: #d0d4e0;
@@ -64,8 +66,10 @@
   --red-deep:    #fee2e2;
   --amber:       #b45309;
   --amber-deep:  #fef3c7;
-  --purple:      #7c3aed;
-  --purple-deep: #ede9fe;
+  --teal:        #0e7490;
+  --teal-deep:   #cffafe;
+  --rust:        #9a3412;
+  --rust-deep:   #ffedd5;
 
   --accent:      #4a78d4;
 
@@ -835,11 +839,11 @@ html, body {
 .sc-empty { color: var(--text-muted); font-size: 11px; }
 
 /* Hole colour coding */
-.sc-score-cell.hole-eagle  { background: var(--purple-deep); color: var(--purple); }
+.sc-score-cell.hole-eagle  { background: var(--teal-deep);   color: var(--teal);   }
 .sc-score-cell.hole-birdie { background: var(--green-deep);  color: var(--green);  }
 .sc-score-cell.hole-par    { background: var(--bg-card);     color: var(--text-primary); }
-.sc-score-cell.hole-bogey  { background: var(--red-deep);  color: var(--red);  }
-.sc-score-cell.hole-double { background: var(--amber-deep);    color: var(--amber);    }
+.sc-score-cell.hole-bogey  { background: var(--red-deep);    color: var(--red);    }
+.sc-score-cell.hole-double { background: var(--rust-deep);   color: var(--rust);   }
 
 /* BB highlight outline on player scorecard */
 .sc-bb-hole,
