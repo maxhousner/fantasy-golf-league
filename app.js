@@ -38,11 +38,21 @@ const state = {
   animatingExpand: new Set(),  // keys to play the expand animation once on next render; cleared at end of render()
 };
 
+// Cached DOM references — populated in init() so we don't re-query the same nodes every render.
+const els = {};
+
 // ============================================================
 //  HELPERS
 // ============================================================
 
 const normalizeName = name => String(name ?? "").trim().toLowerCase();
+
+const escapeHtml = s => String(s ?? "")
+  .replace(/&/g, "&amp;")
+  .replace(/</g, "&lt;")
+  .replace(/>/g, "&gt;")
+  .replace(/"/g, "&quot;")
+  .replace(/'/g, "&#39;");
 
 function getPlayer(name) { return state.playerScores[normalizeName(name)]; }
 function getPoints(name) { return state.fieldGolferPoints[normalizeName(name)]; }
@@ -74,7 +84,7 @@ function toggleSet(set, key) {
 
 function parseDate(yyyymmdd) {
   const s = String(yyyymmdd);
-  return new Date(parseInt(s.slice(0, 4)), parseInt(s.slice(4, 6)) - 1, parseInt(s.slice(6, 8)));
+  return new Date(parseInt(s.slice(0, 4), 10), parseInt(s.slice(4, 6), 10) - 1, parseInt(s.slice(6, 8), 10));
 }
 
 function todayMidnight() {
@@ -115,6 +125,7 @@ async function fetchScores() {
   const tournament = TOURNAMENTS[ACTIVE_TOURNAMENT];
   if (!tournament) { setError("No active tournament configured in data.js"); return; }
 
+  state.error = null;
   const tState = getTournamentState(tournament);
   state.tournamentState = tState;
 
@@ -127,9 +138,8 @@ async function fetchScores() {
       }
       state.autoExpandedFor = ACTIVE_TOURNAMENT;
     }
-    state.leaderboard       = computeLeaderboard();
-    state.lastUpdated       = new Date();
-    state.error             = null;
+    state.leaderboard = computeLeaderboard();
+    state.lastUpdated = null;
     render();
     return;
   }
@@ -151,7 +161,6 @@ async function fetchScores() {
   state.fieldGolferPoints = calcPoints();
   state.leaderboard       = computeLeaderboard();
   state.lastUpdated       = new Date();
-  state.error             = null;
   setLoading(false);
   render();
 }
@@ -250,7 +259,7 @@ function parseToParValue(str) {
   if (!str || str === "-" || str === "--") return 0;
   const s = String(str).trim();
   if (s === "E") return 0;
-  const n = parseInt(s);
+  const n = parseInt(s, 10);
   return isNaN(n) ? 0 : n;
 }
 
@@ -284,6 +293,17 @@ function calcBestBall(golferNames) {
   const maxRound = Math.max(...players.map(p => p.rounds.length), 0);
   if (!maxRound) return { total: null, totalDisplay: "--", rounds: [] };
 
+  // Pre-build per-player roundNum → (hole → holeData) maps to avoid O(rounds × holes × players × find) work.
+  const playerRoundHoles = players.map(p => {
+    const byRound = new Map();
+    for (const r of p.rounds) {
+      const byHole = new Map();
+      for (const h of r.holes) byHole.set(h.hole, h);
+      byRound.set(r.roundNum, byHole);
+    }
+    return { name: p.name, byRound };
+  });
+
   const bbRounds = [];
   let bbTotalToPar = 0;
 
@@ -293,17 +313,17 @@ function calcBestBall(golferNames) {
 
     for (let hole = 1; hole <= 18; hole++) {
       let bestStrokes = Infinity, par = null, bestPlayers = [];
-      for (const player of players) {
-        const round = player.rounds.find(rd => rd.roundNum === r);
-        if (!round) continue;
-        const holeData = round.holes.find(h => h.hole === hole);
+      for (const { name, byRound } of playerRoundHoles) {
+        const byHole = byRound.get(r);
+        if (!byHole) continue;
+        const holeData = byHole.get(hole);
         if (!holeData) continue;
         if (par === null) par = holeData.par;
         if (holeData.strokes < bestStrokes) {
           bestStrokes = holeData.strokes;
-          bestPlayers = [player.name];
+          bestPlayers = [name];
         } else if (holeData.strokes === bestStrokes) {
-          bestPlayers.push(player.name);
+          bestPlayers.push(name);
         }
       }
       if (bestStrokes === Infinity) continue;
@@ -341,7 +361,7 @@ function formatPoints(val) {
 
 function getFinishPoints(position) {
   if (!position || position === "--") return 0;
-  const pos = parseInt(String(position).replace("T", ""));
+  const pos = parseInt(String(position).replace("T", ""), 10);
   if (isNaN(pos)) return 0;
   const range = POINTS_CONFIG.finishPosition.find(r => pos >= r.min && pos <= r.max);
   return range ? range.pts : 0;
@@ -394,7 +414,7 @@ function calcPoints() {
     perHolePoints.total = HOLE_KEYS.reduce((s, k) => s + perHolePoints[k], 0);
 
     const fourRoundsComplete = state.tournamentState === "post"
-      || (g.rounds.length >= 4 && g.rounds[g.rounds.length - 1]?.holes.length === 18);
+      || (g.rounds.length >= 4 && g.rounds[g.rounds.length - 1].holes.length === 18);
     const finishEligible = fourRoundsComplete && !g.missedCut;
     const finishPts      = finishEligible ? getFinishPoints(g.position) : 0;
 
@@ -431,14 +451,25 @@ function tournamentHasRosters() {
   return MANAGERS.some(m => (m.golfers[ACTIVE_TOURNAMENT] ?? []).length > 0);
 }
 
-function getDraftedBy(golferName) {
-  const target = normalizeName(golferName);
-  const drafted = [];
+// Build { normalizedGolferName → [managerName, ...] } for the active tournament. Compute once
+// per render instead of walking every manager × roster for every golfer in the field.
+function buildDraftedByMap() {
+  const map = {};
   for (const manager of MANAGERS) {
     const roster = manager.golfers[ACTIVE_TOURNAMENT] ?? [];
-    if (roster.some(n => normalizeName(n) === target)) drafted.push(manager.name);
+    for (const name of roster) {
+      const key = normalizeName(name);
+      (map[key] ||= []).push(manager.name);
+    }
   }
-  return drafted;
+  return map;
+}
+
+// Field-view position parser hoisted out of the render hot path; returns 9999 for missing/invalid
+// so missed-cut and unranked entries sort to the bottom on tie-breaks.
+function parseFieldPos(p) {
+  if (!p.position || p.position === "--") return 9999;
+  return parseInt(String(p.position).replace("T", ""), 10) || 9999;
 }
 
 // ============================================================
@@ -479,9 +510,15 @@ function computeLeaderboard() {
       cutPlayerName,
     };
   });
+  rankLeaderboard(results);
+  return results;
+}
+
+// Sort + rank in place. Used both after a full compute and after sort-only mutations
+// (e.g. setSortBy) so we don't recompute combined/best-ball when only ordering changes.
+function rankLeaderboard(results) {
   sortLeaderboard(results);
   assignRanks(results);
-  return results;
 }
 
 function sortLeaderboard(results) {
@@ -531,28 +568,28 @@ function render() {
 
 function renderHeader() {
   const t = TOURNAMENTS[ACTIVE_TOURNAMENT];
-  document.getElementById("tournament-name").textContent = t?.name ?? "-";
-  document.getElementById("tournament-loc").textContent  = t?.location ?? "";
-  if (t) {
-    document.getElementById("tournament-dates").textContent =
+  if (els.tournamentName) els.tournamentName.textContent = t?.name ?? "-";
+  if (els.tournamentLoc)  els.tournamentLoc.textContent  = t?.location ?? "";
+  if (t && els.tournamentDates) {
+    els.tournamentDates.textContent =
       `${formatDateDisplay(t.startDate)} – ${formatDateDisplay(t.endDate)}`;
   }
-  if (state.lastUpdated) {
-    document.getElementById("last-updated").textContent =
-      `Updated ${state.lastUpdated.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+  if (els.lastUpdated) {
+    els.lastUpdated.textContent = state.lastUpdated
+      ? `Updated ${state.lastUpdated.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
+      : "";
   }
 }
 
 function renderLeaderboard() {
-  const container = document.getElementById("leaderboard-body");
+  const container = els.leaderboardBody;
   if (!container) return;
 
   document.querySelectorAll(".th-sortable").forEach(th => {
     th.classList.toggle("sort-active", th.dataset.sort === state.sortBy);
   });
 
-  const thCombined = document.getElementById("th-combined");
-  if (thCombined) thCombined.style.display = state.showCombined ? "" : "none";
+  if (els.thCombined) els.thCombined.style.display = state.showCombined ? "" : "none";
 
   const colspan = state.showCombined ? 6 : 5;
 
@@ -561,7 +598,7 @@ function renderLeaderboard() {
     return;
   }
   if (state.error && !state.leaderboard.length) {
-    container.innerHTML = `<tr><td colspan="${colspan}" class="error-cell">${state.error}</td></tr>`;
+    container.innerHTML = `<tr><td colspan="${colspan}" class="error-cell">${escapeHtml(state.error)}</td></tr>`;
     return;
   }
 
@@ -572,7 +609,7 @@ function renderLeaderboard() {
     html += `<tr><td colspan="${colspan}" class="info-cell"><div>Tournament Starts: ${formatDateDisplay(t.startDate)}</div><div>Draft: ${draftDateDisplay(t)}</div></td></tr>`;
   }
   if (state.error) {
-    html += `<tr><td colspan="${colspan}" class="error-cell" style="padding:8px 20px;">${state.error}</td></tr>`;
+    html += `<tr><td colspan="${colspan}" class="error-cell" style="padding:8px 20px;">${escapeHtml(state.error)}</td></tr>`;
   }
 
   for (const result of state.leaderboard) {
@@ -582,14 +619,15 @@ function renderLeaderboard() {
     const hasScores  = result.combined.total !== null;
     const hasTeamPoints = result.teamPoints !== null;
 
+    const mgrIdAttr = escapeHtml(result.manager.id);
     html += `
       <tr class="manager-row ${isExpanded ? "expanded" : ""} ${!hasRoster ? "no-roster" : ""}"
           data-rank="${result.rank}"
-          onclick="${hasRoster ? `toggleManager('${result.manager.id}')` : ""}">
+          ${hasRoster ? `data-action="toggle-manager" data-manager-id="${mgrIdAttr}"` : ""}>
         <td class="rank-cell">${result.rank}</td>
         <td class="name-cell">
-          <span class="manager-name">${result.manager.name}</span>
-          <span class="team-name">${result.manager.teamName[ACTIVE_TOURNAMENT] ?? ""}</span>
+          <span class="manager-name">${escapeHtml(result.manager.name)}</span>
+          <span class="team-name">${escapeHtml(result.manager.teamName[ACTIVE_TOURNAMENT] ?? "")}</span>
         </td>
         <td class="pts-cell">
           <span class="score-primary">${hasTeamPoints ? formatPoints(result.teamPoints) : "--"}</span>
@@ -621,7 +659,7 @@ function renderLeaderboard() {
             <div class="golfer-list-item ${isPre ? "" : "not-found"}">
               <div class="golfer-list-main no-cursor">
                 <div class="golfer-list-left">
-                  <span class="golfer-name">${golferName}</span>
+                  <span class="golfer-name">${escapeHtml(golferName)}</span>
                 </div>
                 <span class="golfer-score">${isPre ? "--" : "N/A"}</span>
               </div>
@@ -629,19 +667,21 @@ function renderLeaderboard() {
           continue;
         }
 
-        const cutBadge  = g.missedCut ? `<span class="cut-badge">MC</span>` : "";
-        const gPts      = result.golferPoints[golferName];
-        const lastRound = g.rounds[g.rounds.length - 1];
-        const isPlaying = state.tournamentState === "live" && lastRound?.holes.length >= 1 && lastRound.holes.length < 18;
-        const safeName  = golferName.replace(/'/g, "\\'");
+        const cutBadge      = g.missedCut ? `<span class="cut-badge">MC</span>` : "";
+        const gPts          = result.golferPoints[golferName];
+        const lastRound     = g.rounds[g.rounds.length - 1];
+        const isPlaying     = state.tournamentState === "live" && lastRound?.holes.length >= 1 && lastRound.holes.length < 18;
+        const golferAttr    = escapeHtml(golferName);
 
         html += `
           <div class="golfer-list-item ${g.missedCut ? "cut" : ""} ${isGolferExpanded ? "expanded" : ""}">
             <div class="golfer-list-main"
-                 onclick="toggleGolfer('${result.manager.id}', '${safeName}')">
+                 data-action="toggle-golfer"
+                 data-manager-id="${mgrIdAttr}"
+                 data-golfer-name="${golferAttr}">
               <div class="golfer-list-left">
-                <span class="golfer-name">${golferName}${cutBadge}</span>
-                <span class="golfer-position">${g.position}</span>${isPlaying ? `<span class="playing-dot">●</span>` : ""}
+                <span class="golfer-name">${escapeHtml(golferName)}${cutBadge}</span>
+                <span class="golfer-position">${escapeHtml(g.position)}</span>${isPlaying ? `<span class="playing-dot">●</span>` : ""}
               </div>
               <div class="golfer-list-right">
                 ${gPts ? `<span class="golfer-pts ${golferName === result.cutPlayerName ? "pts-cut" : ""}">${formatPoints(gPts.grandTotal)}</span>` : ""}
@@ -653,6 +693,7 @@ function renderLeaderboard() {
         if (isGolferExpanded) {
           html += renderScorecard(g.rounds, {
             type: "player", g, managerId: result.manager.id, golferName, bbHighlightOn: bbOn,
+            result, gPts,
             animating: state.animatingExpand.has(`gfr:${gKey}`),
           });
         }
@@ -667,7 +708,9 @@ function renderLeaderboard() {
         const bbExpanded = state.expandedBB.has(result.manager.id);
         html += `<div class="bb-section">`;
         html += `<div class="golfer-list-item ${bbExpanded ? "expanded" : ""}">
-          <div class="golfer-list-main" onclick="toggleBBExpand('${result.manager.id}')">
+          <div class="golfer-list-main"
+               data-action="toggle-bb-expand"
+               data-manager-id="${mgrIdAttr}">
             <div class="golfer-list-left">
               <span class="golfer-name">Team Best Ball</span>
             </div>
@@ -713,35 +756,44 @@ function renderScorecardRoundLabel(round, roundPts) {
 
 // Unified scorecard renderer for player hole-by-hole and best ball breakdown.
 // opts.type = "player" | "bestball" | "field"
-// "player"   opts: g, managerId, golferName, bbHighlightOn
+// "player"   opts: g, managerId, golferName, bbHighlightOn, result, gPts
 // "bestball" opts: (just rounds passed in, holes use .bestStrokes + .bestPlayers)
 // "field"    opts: g, golferName, gPts
 function renderScorecard(rounds, opts) {
   if (!rounds.length) return "";
 
   const bbContribMap = {};
+  // Per-round perRoundPoints lookup (by round number) — used for the round label.
+  const perRoundPointsMap = new Map();
   let html = `<div class="hole-breakdown${opts.animating ? " animating" : ""}">`;
 
   if (opts.type === "player") {
-    const result = state.leaderboard.find(r => r.manager.id === opts.managerId);
+    const { result, g, golferName, bbHighlightOn, managerId, gPts } = opts;
     if (result) {
       for (const bbRound of result.bestBall.rounds) {
         bbContribMap[bbRound.roundNum] = new Set(
-          bbRound.holes.filter(h => h.bestPlayers.includes(opts.g.name)).map(h => h.hole)
+          bbRound.holes.filter(h => h.bestPlayers.includes(g.name)).map(h => h.hole)
         );
       }
     }
-    const gPts = result?.golferPoints[opts.golferName];
-    const safeName = opts.golferName.replace(/'/g, "\\'");
-    const isPointsExpanded = state.expandedPoints.has(`${opts.managerId}|${opts.golferName}`);
-    const bbLabel  = opts.bbHighlightOn ? "Hide BB Holes" : "Show BB Holes";
-    const ptsLabel = isPointsExpanded   ? "Hide Points Breakdown" : "Show Points Breakdown";
-    html += `${renderRoundChips(opts.g.rounds)}
+    if (gPts?.perRoundPoints) {
+      for (const r of gPts.perRoundPoints) perRoundPointsMap.set(r.roundNum, r.points);
+    }
+    const isPointsExpanded = state.expandedPoints.has(`${managerId}|${golferName}`);
+    const bbLabel    = bbHighlightOn   ? "Hide BB Holes" : "Show BB Holes";
+    const ptsLabel   = isPointsExpanded ? "Hide Points Breakdown" : "Show Points Breakdown";
+    const mgrAttr    = escapeHtml(managerId);
+    const golferAttr = escapeHtml(golferName);
+    html += `${renderRoundChips(g.rounds)}
     <div class="scorecard-btn-row">
       <button class="scorecard-btn pts-toggle-btn ${isPointsExpanded ? "active" : ""}"
-        onclick="event.stopPropagation(); togglePointsBreakdown('${opts.managerId}', '${safeName}')">${ptsLabel}</button>
-      <button class="scorecard-btn bb-toggle-btn ${opts.bbHighlightOn ? "active" : ""}"
-        onclick="event.stopPropagation(); toggleBBHighlight('${opts.managerId}', '${safeName}')">${bbLabel}</button>
+        data-action="toggle-points-breakdown"
+        data-manager-id="${mgrAttr}"
+        data-golfer-name="${golferAttr}">${ptsLabel}</button>
+      <button class="scorecard-btn bb-toggle-btn ${bbHighlightOn ? "active" : ""}"
+        data-action="toggle-bb-highlight"
+        data-manager-id="${mgrAttr}"
+        data-golfer-name="${golferAttr}">${bbLabel}</button>
     </div>
     ${isPointsExpanded && gPts ? renderPointsBreakdown(gPts) : ""}`;
   }
@@ -752,21 +804,29 @@ function renderScorecard(rounds, opts) {
   }
 
   if (opts.type === "field") {
-    const safeName = opts.golferName.replace(/'/g, "\\'");
-    const isPointsExpanded = state.expandedFieldPoints.has(opts.golferName);
+    const { golferName, gPts, g } = opts;
+    if (gPts?.perRoundPoints) {
+      for (const r of gPts.perRoundPoints) perRoundPointsMap.set(r.roundNum, r.points);
+    }
+    const isPointsExpanded = state.expandedFieldPoints.has(normalizeName(golferName));
     const ptsLabel = isPointsExpanded ? "Hide Points Breakdown" : "Show Points Breakdown";
-    html += `${renderRoundChips(opts.g.rounds)}
+    html += `${renderRoundChips(g.rounds)}
     <div class="scorecard-btn-row">
       <button class="scorecard-btn pts-toggle-btn ${isPointsExpanded ? "active" : ""}"
-        onclick="event.stopPropagation(); toggleFieldPointsBreakdown('${safeName}')">${ptsLabel}</button>
+        data-action="toggle-field-points"
+        data-golfer-name="${escapeHtml(golferName)}">${ptsLabel}</button>
     </div>
-    ${isPointsExpanded && opts.gPts ? renderPointsBreakdown(opts.gPts) : ""}`;
+    ${isPointsExpanded && gPts ? renderPointsBreakdown(gPts) : ""}`;
   }
 
   for (const round of rounds) {
+    // Map hole number → hole data once per round; avoids O(18) find per hole below.
+    const holesByNum = new Map();
+    for (const h of round.holes) holesByNum.set(h.hole, h);
+
     const front = [], back = [];
     for (let h = 1; h <= 18; h++) {
-      const hData = round.holes.find(x => x.hole === h) ?? null;
+      const hData = holesByNum.get(h) ?? null;
       (h <= 9 ? front : back).push({ h, hData });
     }
 
@@ -781,17 +841,8 @@ function renderScorecard(rounds, opts) {
     const frontToPar = frontStrokes - frontPar, backToPar = backStrokes - backPar;
 
     html += `<div class="scorecard-round">`;
-    if (opts.type === "player") {
-      const result   = state.leaderboard.find(r => r.manager.id === opts.managerId);
-      const gPts     = result?.golferPoints[opts.golferName];
-      const roundPts = gPts?.perRoundPoints?.find(r => r.roundNum === round.roundNum)?.points ?? null;
-      html += renderScorecardRoundLabel(round, roundPts);
-    } else if (opts.type === "field") {
-      const roundPts = opts.gPts?.perRoundPoints?.find(r => r.roundNum === round.roundNum)?.points ?? null;
-      html += renderScorecardRoundLabel(round, roundPts);
-    } else {
-      html += renderScorecardRoundLabel(round, null);
-    }
+    const roundPts = opts.type === "bestball" ? null : (perRoundPointsMap.get(round.roundNum) ?? null);
+    html += renderScorecardRoundLabel(round, roundPts);
     html += `<div class="scorecard-scroll-wrap"><table class="scorecard-table">`;
 
     // HOLE header row
@@ -841,8 +892,8 @@ function renderScorecardCell(hData, type, isBB) {
   if (type === "bestball") {
     const players = hData.bestPlayers.map(playerInitials).join(" · ");
     return `<td class="sc-score-cell ${holeColorClass(hData.toPar)} sc-bb-clickable"
-      data-players="${players}"
-      onclick="event.stopPropagation(); showBBPopup(this, '${players}')">${strokes}</td>`;
+      data-action="show-bb-popup"
+      data-players="${escapeHtml(players)}">${strokes}</td>`;
   }
   return `<td class="sc-score-cell ${holeColorClass(hData.toPar)}${bbClass}"><span class="sc-stroke">${strokes}</span></td>`;
 }
@@ -866,7 +917,7 @@ function playerInitials(fullName) {
 // ============================================================
 
 function renderFieldLeaderboard() {
-  const container = document.getElementById("field-body");
+  const container = els.fieldBody;
   if (!container) return;
 
   if (state.tournamentState === "pre") {
@@ -889,47 +940,45 @@ function renderFieldLeaderboard() {
     th.classList.toggle("sort-active", th.dataset.fieldSort === state.fieldSortBy);
   });
 
-  const hasRosters = tournamentHasRosters();
+  const hasRosters    = tournamentHasRosters();
+  const draftedByMap  = hasRosters ? buildDraftedByMap() : null;
 
-  const parsePos = p => {
-    if (!p.position || p.position === "--") return 9999;
-    return parseInt(String(p.position).replace("T", "")) || 9999;
-  };
-
-  const golfers = Object.values(state.playerScores).slice().sort((a, b) => {
+  const golfers = Object.values(state.playerScores).sort((a, b) => {
     if (a.missedCut !== b.missedCut) return a.missedCut ? 1 : -1;
     if (state.fieldSortBy === "pts") {
       const aPts = getPoints(a.name)?.grandTotal ?? -Infinity;
       const bPts = getPoints(b.name)?.grandTotal ?? -Infinity;
       const d = bPts - aPts;
-      return d !== 0 ? d : parsePos(a) - parsePos(b);
+      return d !== 0 ? d : parseFieldPos(a) - parseFieldPos(b);
     }
     // "score" — sort by to-par, use ESPN position order to break ties
     const d = a.overallToPar - b.overallToPar;
-    return d !== 0 ? d : parsePos(a) - parsePos(b);
+    return d !== 0 ? d : parseFieldPos(a) - parseFieldPos(b);
   });
 
   let html = "";
   for (const g of golfers) {
-    const isExpanded = state.expandedFieldGolfers.has(g.name);
+    const nameKey    = normalizeName(g.name);
+    const isExpanded = state.expandedFieldGolfers.has(nameKey);
     const gPts       = getPoints(g.name);
     const cutBadge   = g.missedCut ? `<span class="cut-badge">MC</span>` : "";
     const lastRound  = g.rounds[g.rounds.length - 1];
     const isPlaying  = state.tournamentState === "live" && lastRound?.holes.length >= 1 && lastRound.holes.length < 18;
-    const safeName   = g.name.replace(/'/g, "\\'");
+    const golferAttr = escapeHtml(g.name);
 
     let draftedHtml = "";
-    if (hasRosters) {
-      const drafted = getDraftedBy(g.name);
-      if (drafted.length > 0) draftedHtml = `<span class="team-name">${drafted.join(", ")}</span>`;
+    if (draftedByMap) {
+      const drafted = draftedByMap[nameKey];
+      if (drafted && drafted.length > 0) draftedHtml = `<span class="team-name">${escapeHtml(drafted.join(", "))}</span>`;
     }
 
     html += `
       <tr class="manager-row ${isExpanded ? "expanded" : ""} ${g.missedCut ? "field-cut-row" : ""}"
-          onclick="toggleFieldGolfer('${safeName}')">
-        <td class="rank-cell">${g.position}</td>
+          data-action="toggle-field-golfer"
+          data-golfer-name="${golferAttr}">
+        <td class="rank-cell">${escapeHtml(g.position)}</td>
         <td class="${draftedHtml ? "name-cell" : "name-cell field-name-single"}">
-          <span class="manager-name">${g.name}${cutBadge}${isPlaying ? `<span class="playing-dot" style="margin-left:4px">●</span>` : ""}</span>
+          <span class="manager-name">${escapeHtml(g.name)}${cutBadge}${isPlaying ? `<span class="playing-dot" style="margin-left:4px">●</span>` : ""}</span>
           ${draftedHtml}
         </td>
         <td class="pts-cell">
@@ -942,7 +991,7 @@ function renderFieldLeaderboard() {
       </tr>`;
 
     if (isExpanded) {
-      const animFld = state.animatingExpand.has(`fld:${g.name}`) ? " animating" : "";
+      const animFld = state.animatingExpand.has(`fld:${nameKey}`) ? " animating" : "";
       html += `<tr class="detail-row"><td colspan="5"><div class="detail-panel${animFld}">`;
       html += renderScorecard(g.rounds, { type: "field", g, golferName: g.name, gPts });
       html += `</div></td></tr>`;
@@ -955,22 +1004,23 @@ function renderFieldLeaderboard() {
 function toggleFieldView() {
   const entering = state.activeView !== "field";
   state.activeView = entering ? "field" : "fantasy";
-  document.getElementById("leaderboard-main").style.display          = entering ? "none" : "";
-  document.getElementById("field-view").style.display                = entering ? "" : "none";
-  document.getElementById("field-tab").classList.toggle("active", entering);
-  document.querySelector(".combined-toggle-container").style.display = entering ? "none" : "";
+  if (els.leaderboardMain) els.leaderboardMain.style.display = entering ? "none" : "";
+  if (els.fieldView)       els.fieldView.style.display       = entering ? "" : "none";
+  els.fieldTab?.classList.toggle("active", entering);
+  if (els.combinedToggleContainer) els.combinedToggleContainer.style.display = entering ? "none" : "";
   if (entering) renderFieldLeaderboard();
 }
 
 function toggleFieldGolfer(golferName) {
-  toggleSet(state.expandedFieldGolfers, golferName);
-  if (state.expandedFieldGolfers.has(golferName)) state.animatingExpand.add(`fld:${golferName}`);
+  const key = normalizeName(golferName);
+  toggleSet(state.expandedFieldGolfers, key);
+  if (state.expandedFieldGolfers.has(key)) state.animatingExpand.add(`fld:${key}`);
   renderFieldLeaderboard();
   state.animatingExpand.clear();
 }
 
 function toggleFieldPointsBreakdown(golferName) {
-  toggleSet(state.expandedFieldPoints, golferName);
+  toggleSet(state.expandedFieldPoints, normalizeName(golferName));
   renderFieldLeaderboard();
 }
 
@@ -1000,12 +1050,10 @@ function holeColorClass(toPar) {
 
 function setLoading(val) {
   state.loading = val;
-  const btn = document.getElementById("refresh-btn");
-  if (btn) btn.disabled = val;
-  const ind = document.getElementById("loading-indicator");
-  if (ind) {
-    ind.style.transition = val ? "opacity 0.1s ease" : "opacity 1s ease";
-    ind.style.opacity    = val ? "1" : "0";
+  if (els.refreshBtn) els.refreshBtn.disabled = val;
+  if (els.loadingIndicator) {
+    els.loadingIndicator.style.transition = val ? "opacity 0.1s ease" : "opacity 1s ease";
+    els.loadingIndicator.style.opacity    = val ? "1" : "0";
   }
 }
 
@@ -1077,7 +1125,7 @@ function showBBPopup(cell, players) {
 
 function setSortBy(col) {
   state.sortBy = col;
-  state.leaderboard = computeLeaderboard();
+  rankLeaderboard(state.leaderboard);
   render();
 }
 
@@ -1237,7 +1285,7 @@ function toggleCombined() {
   state.showCombined = !state.showCombined;
   if (!state.showCombined && state.sortBy === "combined") {
     state.sortBy = "points";
-    state.leaderboard = computeLeaderboard();
+    rankLeaderboard(state.leaderboard);
   }
   const btn = document.getElementById("combined-toggle-btn");
   if (btn) btn.textContent = state.showCombined ? "Hide Combined Scores" : "Show Combined Scores";
@@ -1257,10 +1305,10 @@ function switchTournament(key) {
   // Return to fantasy view if field was open
   if (state.activeView === "field") {
     state.activeView = "fantasy";
-    document.getElementById("leaderboard-main").style.display          = "";
-    document.getElementById("field-view").style.display                = "none";
-    document.getElementById("field-tab").classList.remove("active");
-    document.querySelector(".combined-toggle-container").style.display = "";
+    if (els.leaderboardMain) els.leaderboardMain.style.display = "";
+    if (els.fieldView)       els.fieldView.style.display       = "none";
+    els.fieldTab?.classList.remove("active");
+    if (els.combinedToggleContainer) els.combinedToggleContainer.style.display = "";
   }
 
   state.expandedManagers.clear();
@@ -1320,33 +1368,80 @@ function initTheme() {
   document.getElementById("theme-toggle-btn")?.addEventListener("click", toggleTheme);
 }
 
+function cacheEls() {
+  els.leaderboardBody         = document.getElementById("leaderboard-body");
+  els.fieldBody               = document.getElementById("field-body");
+  els.leaderboardMain         = document.getElementById("leaderboard-main");
+  els.fieldView               = document.getElementById("field-view");
+  els.fieldTab                = document.getElementById("field-tab");
+  els.combinedToggleContainer = document.querySelector(".combined-toggle-container");
+  els.lastUpdated             = document.getElementById("last-updated");
+  els.tournamentName          = document.getElementById("tournament-name");
+  els.tournamentLoc           = document.getElementById("tournament-loc");
+  els.tournamentDates         = document.getElementById("tournament-dates");
+  els.thCombined              = document.getElementById("th-combined");
+  els.refreshBtn              = document.getElementById("refresh-btn");
+  els.loadingIndicator        = document.getElementById("loading-indicator");
+}
+
+// Single delegated click handler for the dynamic leaderboard/field tables. Replaces inline
+// onclick="..." in rendered HTML so we don't have to escape user-controlled names into JS strings.
+function handleDelegatedClick(e) {
+  const target = e.target.closest("[data-action]");
+  if (!target) return;
+  const ds = target.dataset;
+  switch (ds.action) {
+    case "toggle-manager":
+      toggleManager(ds.managerId); break;
+    case "toggle-golfer":
+      toggleGolfer(ds.managerId, ds.golferName); break;
+    case "toggle-bb-expand":
+      toggleBBExpand(ds.managerId); break;
+    case "toggle-points-breakdown":
+      e.stopPropagation();
+      togglePointsBreakdown(ds.managerId, ds.golferName); break;
+    case "toggle-bb-highlight":
+      e.stopPropagation();
+      toggleBBHighlight(ds.managerId, ds.golferName); break;
+    case "toggle-field-points":
+      e.stopPropagation();
+      toggleFieldPointsBreakdown(ds.golferName); break;
+    case "toggle-field-golfer":
+      toggleFieldGolfer(ds.golferName); break;
+    case "show-bb-popup":
+      e.stopPropagation();
+      showBBPopup(target, ds.players); break;
+  }
+}
+
 async function init() {
+  cacheEls();
   initTheme();
   renderHeader();
   buildPointsGuide();
   highlightActiveTab();
   await fetchScores();
-  setInterval(fetchScores, REFRESH_MS);
-  document.getElementById("refresh-btn")?.addEventListener("click", fetchScores);
+  setInterval(() => {
+    // Skip when the tab is hidden or there's nothing left to fetch (pre = no data yet, post = final).
+    if (document.hidden) return;
+    if (state.tournamentState === "pre" || state.tournamentState === "post") return;
+    fetchScores();
+  }, REFRESH_MS);
+  els.refreshBtn?.addEventListener("click", fetchScores);
+  els.leaderboardBody?.addEventListener("click", handleDelegatedClick);
+  els.fieldBody?.addEventListener("click", handleDelegatedClick);
 }
 
 document.addEventListener("DOMContentLoaded", init);
 
-// Expose globals needed by inline onclick handlers in index.html / rendered markup.
-window.state                      = state;
-window.fetchScores                = fetchScores;
-window.toggleManager              = toggleManager;
-window.toggleGolfer               = toggleGolfer;
-window.toggleBBExpand             = toggleBBExpand;
-window.toggleBBHighlight          = toggleBBHighlight;
-window.togglePointsBreakdown      = togglePointsBreakdown;
-window.showBBPopup                = showBBPopup;
-window.setSortBy                  = setSortBy;
-window.togglePointsGuide          = togglePointsGuide;
-window.toggleCutLowest            = toggleCutLowest;
-window.toggleCombined             = toggleCombined;
-window.toggleFieldView            = toggleFieldView;
-window.toggleFieldGolfer          = toggleFieldGolfer;
-window.toggleFieldPointsBreakdown = toggleFieldPointsBreakdown;
-window.setFieldSortBy             = setFieldSortBy;
-window.switchTournament           = switchTournament;
+// Expose globals needed by static inline onclick handlers in index.html and the points-guide popup.
+// (Dynamic rendered handlers go through handleDelegatedClick, so those don't need globals.)
+window.state             = state;          // debug-only: expose for console inspection
+window.fetchScores       = fetchScores;    // debug-only: manual refresh from console
+window.setSortBy         = setSortBy;
+window.togglePointsGuide = togglePointsGuide;
+window.toggleCutLowest   = toggleCutLowest;
+window.toggleCombined    = toggleCombined;
+window.toggleFieldView   = toggleFieldView;
+window.setFieldSortBy    = setFieldSortBy;
+window.switchTournament  = switchTournament;

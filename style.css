@@ -68,6 +68,11 @@
   --purple-deep: #ede9fe;
 
   --accent:      #4a78d4;
+
+  /* Medals tuned for readability on light backgrounds (the dark palette stays the default). */
+  --gold:   #b07a00;
+  --silver: #6b7280;
+  --bronze: #92562c;
 }
 
 html, body {
@@ -184,12 +189,11 @@ html, body {
 }
 
 /* Only apply hover styles on devices that support true hover (not touch) */
+.refresh-btn:active { border-color: var(--accent); color: var(--accent); }
+.refresh-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 @media (hover: hover) {
   .refresh-btn:hover { border-color: var(--accent); color: var(--accent); }
 }
-
-.refresh-btn:active { border-color: var(--accent); color: var(--accent); }
-.refresh-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
 /* ============================================================
    TOURNAMENT BANNER
@@ -927,11 +931,11 @@ html, body {
   letter-spacing: 0.03em;
 }
 
+.combined-toggle-btn:active,
+.combined-toggle-btn.active { border-color: var(--accent); color: var(--accent); }
 @media (hover: hover) {
   .combined-toggle-btn:hover { border-color: var(--accent); color: var(--accent); }
 }
-.combined-toggle-btn:active { border-color: var(--accent); color: var(--accent); }
-.combined-toggle-btn.active { border-color: var(--accent); color: var(--accent); }
 
 .points-guide-popup {
   display: none;
