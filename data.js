@@ -117,7 +117,7 @@ const MANAGERS = [
     name: "Max",
     teamName: {
       the_masters: "Bunker? I Barely Know Her",
-      pga_championship: "[TEAM NAME]",
+      pga_championship: "The Night is Young",
       us_open: "[TEAM NAME]",
       the_open: "[TEAM NAME]",
     },
@@ -129,7 +129,7 @@ const MANAGERS = [
         "Ben Griffin",
         "Akshay Bhatia",
       ],
-      pga_championship: [],
+      pga_championship: ["Cameron Young", "Tommy Fleetwood", "Akshay Bhatia", "Ben Griffin", "Jordan Spieth"],
       us_open: [],
       the_open: [],
     },
@@ -151,7 +151,7 @@ const MANAGERS = [
         "Ben Griffin",
         "Justin Rose",
       ],
-      pga_championship: [],
+      pga_championship: ["Xander Schauffele", "Collin Morikawa", "Justin Thomas", "Patrick Cantlay", "Chris Gotterup"],
       us_open: [],
       the_open: [],
     },
@@ -173,7 +173,7 @@ const MANAGERS = [
         "Chris Gotterup",
         "Ludvig Åberg",
       ],
-      pga_championship: [],
+      pga_championship: ["Rory McIlroy", "Ludvig Aberg", "Si Woo Kim", "Sam Burns", "Maverick McNealy"],
       us_open: [],
       the_open: [],
     },
@@ -195,13 +195,45 @@ const MANAGERS = [
         "Sami Välimäki",
         "Nicolai Højgaard",
       ],
-      pga_championship: [],
+      pga_championship: ["Jon Rahm", "Matt Fitzpatrick", "Robert MacIntyre", "Nicolai Højgaard", "Tyrrell Hatton"],
       us_open: [],
       the_open: [],
     },
   },
   {
     id: "manager_5",
+    name: "Will",
+    teamName: {
+      the_masters: "[TEAM NAME]",
+      pga_championship: "[TEAM NAME]",
+      us_open: "[TEAM NAME]",
+      the_open: "[TEAM NAME]",
+    },
+    golfers: {
+      the_masters: [],
+      pga_championship: ["Scottie Scheffler", "Bryson DeChambeau", "Haotong Li", "Viktor Hovland", "Adam Scott"],
+      us_open: [],
+      the_open: [],
+    },
+  },
+  {
+    id: "manager_6",
+    name: "Stein",
+    teamName: {
+      the_masters: "[TEAM NAME]",
+      pga_championship: "[TEAM NAME]",
+      us_open: "[TEAM NAME]",
+      the_open: "[TEAM NAME]",
+    },
+    golfers: {
+      the_masters: [],
+      pga_championship: ["Justin Rose", "Russell Henley", "J.J. Spaun", "Hideki Matsuyama", "Shane Lowry"],
+      us_open: [],
+      the_open: [],
+    },
+  },
+/*   {
+    id: "manager_7",
     name: "Alex",
     teamName: {
       the_masters: "[TEAM NAME]",
@@ -215,39 +247,7 @@ const MANAGERS = [
       us_open: [],
       the_open: [],
     },
-  },
-  {
-    id: "manager_6",
-    name: "Will",
-    teamName: {
-      the_masters: "[TEAM NAME]",
-      pga_championship: "[TEAM NAME]",
-      us_open: "[TEAM NAME]",
-      the_open: "[TEAM NAME]",
-    },
-    golfers: {
-      the_masters: [],
-      pga_championship: [],
-      us_open: [],
-      the_open: [],
-    },
-  },
-  {
-    id: "manager_7",
-    name: "Stein",
-    teamName: {
-      the_masters: "[TEAM NAME]",
-      pga_championship: "[TEAM NAME]",
-      us_open: "[TEAM NAME]",
-      the_open: "[TEAM NAME]",
-    },
-    golfers: {
-      the_masters: [],
-      pga_championship: [],
-      us_open: [],
-      the_open: [],
-    },
-  },
+  }, */
 ];
 
 // ============================================================
