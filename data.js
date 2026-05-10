@@ -173,7 +173,7 @@ const MANAGERS = [
         "Chris Gotterup",
         "Ludvig Åberg",
       ],
-      pga_championship: ["Rory McIlroy", "Ludvig Aberg", "Si Woo Kim", "Sam Burns", "Maverick McNealy"],
+      pga_championship: ["Rory McIlroy", "Ludvig Åberg", "Si Woo Kim", "Sam Burns", "Maverick McNealy"],
       us_open: [],
       the_open: [],
     },
