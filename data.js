@@ -183,7 +183,7 @@ const MANAGERS = [
     name: "Rehan",
     teamName: {
       the_masters: "re-birdie",
-      pga_championship: "[TEAM NAME]",
+      pga_championship: "re-birdie",
       us_open: "[TEAM NAME]",
       the_open: "[TEAM NAME]",
     },
