@@ -899,7 +899,10 @@ function renderScorecardCell(hData, type, isBB) {
 }
 
 function renderTotalCell(played, strokes, toPar) {
-  if (!played) return `<td class="sc-section-total sc-score-cell"><span class="sc-total-strokes">-</span></td>`;
+  if (!played) return `<td class="sc-section-total sc-score-cell">
+    <span class="sc-total-strokes">-</span>
+    <span class="sc-total-topar">&nbsp;</span>
+  </td>`;
   return `<td class="sc-section-total sc-score-cell ${scoreColorClass(toPar)}">
     <span class="sc-total-strokes">${strokes}</span>
     <span class="sc-total-topar">${formatToPar(toPar)}</span>
