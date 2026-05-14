@@ -528,15 +528,12 @@ function sortLeaderboard(results) {
     if (aHas && !bHas) return -1;
     if (!aHas && !bHas) return 0;
     if (state.sortBy === "bestball") {
-      const d = (a.bestBall.total ?? 999) - (b.bestBall.total ?? 999);
-      return d !== 0 ? d : (a.combined.total ?? 999) - (b.combined.total ?? 999);
+      return (a.bestBall.total ?? 999) - (b.bestBall.total ?? 999);
     }
     if (state.sortBy === "points") {
-      const d = (b.teamPoints ?? -9999) - (a.teamPoints ?? -9999);
-      return d !== 0 ? d : (a.combined.total ?? 999) - (b.combined.total ?? 999);
+      return (b.teamPoints ?? -9999) - (a.teamPoints ?? -9999);
     }
-    const d = (a.combined.total ?? 999) - (b.combined.total ?? 999);
-    return d !== 0 ? d : (a.bestBall.total ?? 999) - (b.bestBall.total ?? 999);
+    return (a.combined.total ?? 999) - (b.combined.total ?? 999);
   });
 }
 
@@ -546,14 +543,20 @@ function assignRanks(results) {
     if (!results[i].golferNames.length) { results[i].rank = "--"; continue; }
     if (i > 0) {
       const p = results[i - 1], c = results[i];
-      const tied = state.sortBy === "points"
-        ? p.teamPoints === c.teamPoints
-        : p.combined.total === c.combined.total && p.bestBall.total === c.bestBall.total;
+      let tied;
+      if (state.sortBy === "points") {
+        tied = p.teamPoints === c.teamPoints;
+      } else if (state.sortBy === "bestball") {
+        tied = p.bestBall.total === c.bestBall.total;
+      } else {
+        tied = p.combined.total === c.combined.total;
+      }
       if (!tied) rank = i + 1;
     }
     results[i].rank = rank;
   }
 }
+
 
 // ============================================================
 //  RENDER
