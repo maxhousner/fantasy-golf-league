@@ -834,6 +834,12 @@ function renderScorecard(rounds, opts) {
     const holesByNum = new Map();
     for (const h of round.holes) holesByNum.set(h.hole, h);
 
+    // Start hole = the hole played first (lowest playOrder). Bestball rounds don't have playOrder
+    // since they're synthesized — fall back to null and no marker renders.
+    const startHole = round.holes.length
+      ? round.holes.reduce((min, h) => (h.playOrder ?? 0) < (min.playOrder ?? 0) ? h : min).hole
+      : null;
+
     const front = [], back = [];
     for (let h = 1; h <= 18; h++) {
       const hData = holesByNum.get(h) ?? null;
@@ -857,9 +863,9 @@ function renderScorecard(rounds, opts) {
 
     // HOLE header row
     html += `<thead><tr><th class="sc-label-cell">HOLE</th>`;
-    for (const { h } of front) html += `<th class="sc-hole-header">${h}</th>`;
+    for (const { h } of front) html += `<th class="sc-hole-header${h === startHole ? " sc-start-hole" : ""}">${h}</th>`;
     html += `<th class="sc-section-total sc-header-total">OUT</th>`;
-    for (const { h } of back)  html += `<th class="sc-hole-header">${h}</th>`;
+    for (const { h } of back)  html += `<th class="sc-hole-header${h === startHole ? " sc-start-hole" : ""}">${h}</th>`;
     html += `<th class="sc-section-total sc-header-total">IN</th>`;
     html += `<th class="sc-section-total sc-header-total">TOT</th>`;
     html += `</tr></thead><tbody>`;
