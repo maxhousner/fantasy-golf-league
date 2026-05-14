@@ -241,14 +241,12 @@ function parseRounds(linescores) {
       totalStrokes: Math.round(ls.value),
       toParDisplay: ls.displayValue,
       toPar:        parseToParValue(ls.displayValue),
-      holes: ls.linescores
-        .map(h => {
-          const strokes   = Math.round(h.value);
-          const scoreDisp = h.scoreType?.displayValue ?? "E";
-          const toParHole = parseToParValue(scoreDisp);
-          return { hole: h.period, strokes, par: strokes - toParHole, toPar: toParHole };
-        })
-        .sort((a, b) => a.hole - b.hole),
+      holes: ls.linescores.map((h, idx) => {
+        const strokes   = Math.round(h.value);
+        const scoreDisp = h.scoreType?.displayValue ?? "E";
+        const toParHole = parseToParValue(scoreDisp);
+        return { hole: h.period, strokes, par: strokes - toParHole, toPar: toParHole, playOrder: idx };
+      }),
     });
   }
   rounds.sort((a, b) => a.roundNum - b.roundNum);
@@ -383,15 +381,24 @@ function calcPoints() {
       const roundCounts = zeroCounts();
       let roundHoleInOnes = 0, streak = 0, awardedThisRound = false, roundBirdieStreaks = 0;
 
+      // Count classifications and hole-in-ones (order doesn't matter).
       for (const hole of round.holes) {
         if (hole.strokes === 1) { holeInOnes++; roundHoleInOnes++; }
         const cls = classifyHole(hole.toPar);
         counts[cls]++;
         roundCounts[cls]++;
+      }
 
+      // Birdie streak detection: walk holes in PLAY order (preserved from ESPN's array).
+      // This correctly handles back-nine starters: a player who starts on 10, birdies 10-11,
+      // then birdies hole 9 (their last played) gets streak = 2, 0, 0... 0, 1 — no bonus.
+      const playOrdered = [...round.holes].sort((a, b) => a.playOrder - b.playOrder);
+      for (const hole of playOrdered) {
         if (hole.toPar <= -1) {
           streak++;
-          if (streak >= 3 && !awardedThisRound) { birdieStreaks++; roundBirdieStreaks++; awardedThisRound = true; }
+          if (streak >= 3 && !awardedThisRound) {
+            birdieStreaks++; roundBirdieStreaks++; awardedThisRound = true;
+          }
         } else {
           streak = 0;
         }
