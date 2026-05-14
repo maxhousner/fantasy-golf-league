@@ -801,6 +801,11 @@ html, body {
   border-bottom: 1px solid var(--border);
 }
 
+.scorecard-table th.sc-start-hole {
+  color: var(--accent);
+  font-weight: 700;
+}
+
 /* OUT / IN / TOT columns */
 .scorecard-table th.sc-section-total,
 .scorecard-table td.sc-section-total {
