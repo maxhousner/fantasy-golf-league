@@ -161,7 +161,7 @@ const MANAGERS = [
     name: "Paul",
     teamName: {
       the_masters: "I'm Brandon!",
-      pga_championship: "Team Paul",
+      pga_championship: "Glory for Rory",
       us_open: "[TEAM NAME]",
       the_open: "[TEAM NAME]",
     },
