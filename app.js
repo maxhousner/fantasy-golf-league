@@ -173,7 +173,7 @@ function parseESPN(data) {
   const competition  = data?.events?.[0]?.competitions?.[0];
   const competitors  = competition?.competitors ?? [];
   const currentRound = competition?.status?.period ?? 0;
-  const tourneyDone  = competition?.status?.type?.completed === true;
+  const tourneyDone  = competition?.status?.type?.name === "STATUS_FINAL";
 
   const playerList = [];
   for (const comp of competitors) {
