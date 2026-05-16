@@ -175,6 +175,7 @@ function parseESPN(data) {
   const currentRound = competition?.status?.period ?? 0;
   const tourneyDone  = competition?.status?.type?.name === "STATUS_FINAL";
 
+
   const playerList = [];
   for (const comp of competitors) {
     const name = comp.athlete?.displayName;
@@ -184,7 +185,7 @@ function parseESPN(data) {
     playerList.push({
       name,
       order:               comp.order ?? 999,
-      missedCut:           inferMissedCut(comp, currentRound, tourneyDone),
+      missedCut:            inferMissedCut(comp, competition),
       overallToPar,
       overallToParDisplay: rounds.length > 0 ? formatToPar(overallToPar) : (comp.score ?? "E"),
       espnSortScore:       parseToParValue(comp.score ?? "E"), // includes playoff result, used only for position ranking
@@ -261,13 +262,50 @@ function parseToParValue(str) {
   return isNaN(n) ? 0 : n;
 }
 
-function inferMissedCut(comp, currentRound, tourneyDone) {
+function inferMissedCut(comp, competition) {
   const ls = comp.linescores ?? [];
-  const withHoles = ls.filter(r => r.linescores?.length > 0 && !(r.displayValue === "-" && r.value === 0));
-  if (withHoles.length !== 2) return false;
-  if (withHoles.some(r => r.period >= 3)) return false;
-  return tourneyDone || currentRound >= 3;
+  const playedRounds = ls.filter(r => Array.isArray(r.linescores) && r.linescores.length > 0);
+  const statusName = competition?.status?.type?.name;
+  const currentRound = competition?.status?.period ?? 0;
+  const roundComplete = competition?.status?.type?.completed === true;
+
+  // Tournament fully complete: fewer than 4 real rounds = cut or withdrew.
+  if (statusName === "STATUS_FINAL") {
+    return playedRounds.length < 4;
+  }
+
+  // Pre-cut (R1 in progress/done, or R2 in progress): cut hasn't happened yet.
+  if (currentRound < 2 || (currentRound === 2 && !roundComplete)) {
+    return false;
+  }
+
+  // R2 complete, R3 not started: use the R3 placeholder signal.
+  if (currentRound === 2 && roundComplete) {
+    const hasR3Placeholder = ls.some(r =>
+      r.period === 3 && r.value === undefined &&
+      !(Array.isArray(r.linescores) && r.linescores.length > 0)
+    );
+    return !hasR3Placeholder;
+  }
+
+  // R3 in progress or complete: use the R4 placeholder signal.
+  if (currentRound === 3) {
+    const hasR4Placeholder = ls.some(r =>
+      r.period === 4 && r.value === undefined &&
+      !(Array.isArray(r.linescores) && r.linescores.length > 0)
+    );
+    return !hasR4Placeholder;
+  }
+
+  // R4 in progress or complete (but tournament not yet STATUS_FINAL):
+  // made-cut players have at least 3 played rounds; cut players are stuck at 2.
+  if (currentRound >= 4) {
+    return playedRounds.length < 3;
+  }
+
+  return false;
 }
+
 
 // ============================================================
 //  SCORING ENGINE
