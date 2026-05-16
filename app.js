@@ -573,12 +573,21 @@ function sortLeaderboard(results) {
     if (aHas && !bHas) return -1;
     if (!aHas && !bHas) return 0;
     if (state.sortBy === "bestball") {
-      return (a.bestBall.total ?? 999) - (b.bestBall.total ?? 999);
-    }
-    if (state.sortBy === "points") {
+      const d = (a.bestBall.total ?? 999) - (b.bestBall.total ?? 999);
+      if (d !== 0) return d;
+      // Tiebreak: higher points wins
       return (b.teamPoints ?? -9999) - (a.teamPoints ?? -9999);
     }
-    return (a.combined.total ?? 999) - (b.combined.total ?? 999);
+    if (state.sortBy === "points") {
+      const d = (b.teamPoints ?? -9999) - (a.teamPoints ?? -9999);
+      if (d !== 0) return d;
+      // Tiebreak: better (lower) bestball wins
+      return (a.bestBall.total ?? 999) - (b.bestBall.total ?? 999);
+    }
+    const d = (a.combined.total ?? 999) - (b.combined.total ?? 999);
+    if (d !== 0) return d;
+    // Tiebreak: better (lower) bestball wins
+    return (a.bestBall.total ?? 999) - (b.bestBall.total ?? 999);
   });
 }
 
