@@ -202,7 +202,7 @@ const MANAGERS = [
   },
   {
     id: "manager_5",
-    name: "Will",
+    name: "Will C",
     teamName: {
       the_masters: "[TEAM NAME]",
       pga_championship: "Team Will",
@@ -232,7 +232,7 @@ const MANAGERS = [
       the_open: [],
     },
   },
-/*   {
+  {
     id: "manager_7",
     name: "Alex",
     teamName: {
@@ -247,7 +247,23 @@ const MANAGERS = [
       us_open: [],
       the_open: [],
     },
-  }, */
+  },
+    {
+    id: "manager_8",
+    name: "Will L",
+    teamName: {
+      the_masters: "[TEAM NAME]",
+      pga_championship: "[TEAM NAME]",
+      us_open: "[TEAM NAME]",
+      the_open: "[TEAM NAME]",
+    },
+    golfers: {
+      the_masters: [],
+      pga_championship: [],
+      us_open: [],
+      the_open: [],
+    },
+  },
 ];
 
 // ============================================================
