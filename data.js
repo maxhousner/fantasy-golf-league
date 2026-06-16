@@ -130,7 +130,7 @@ const MANAGERS = [
         "Akshay Bhatia",
       ],
       pga_championship: ["Cameron Young", "Tommy Fleetwood", "Akshay Bhatia", "Ben Griffin", "Jordan Spieth"],
-      us_open: ["Cameron Young", "Ludvig Aberg", "Justin Thomas", "Min Woo Lee"],
+      us_open: ["Cameron Young", "Ludvig Åberg", "Justin Thomas", "Min Woo Lee"],
       the_open: [],
     },
   },
