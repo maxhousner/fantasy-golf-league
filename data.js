@@ -122,13 +122,7 @@ const MANAGERS = [
       the_open: "[TEAM NAME]",
     },
     golfers: {
-      the_masters: [
-        "Scottie Scheffler",
-        "Collin Morikawa",
-        "Justin Rose",
-        "Ben Griffin",
-        "Akshay Bhatia",
-      ],
+      the_masters: ["Scottie Scheffler", "Collin Morikawa", "Justin Rose", "Ben Griffin", "Akshay Bhatia"],
       pga_championship: ["Cameron Young", "Tommy Fleetwood", "Akshay Bhatia", "Ben Griffin", "Jordan Spieth"],
       us_open: ["Cameron Young", "Ludvig Åberg", "Justin Thomas", "Min Woo Lee"],
       the_open: [],
@@ -144,13 +138,7 @@ const MANAGERS = [
       the_open: "[TEAM NAME]",
     },
     golfers: {
-      the_masters: [
-        "Scottie Scheffler",
-        "Patrick Cantlay",
-        "Tommy Fleetwood",
-        "Ben Griffin",
-        "Justin Rose",
-      ],
+      the_masters: ["Scottie Scheffler", "Patrick Cantlay", "Tommy Fleetwood", "Ben Griffin", "Justin Rose"],
       pga_championship: ["Xander Schauffele", "Collin Morikawa", "Justin Thomas", "Patrick Cantlay", "Chris Gotterup"],
       us_open: ["Scottie Scheffler", "Collin Morikawa", "J.J. Spaun", "Tyrrell Hatton"],
       the_open: [],
@@ -166,13 +154,7 @@ const MANAGERS = [
       the_open: "[TEAM NAME]",
     },
     golfers: {
-      the_masters: [
-        "Scottie Scheffler",
-        "Bryson DeChambeau",
-        "Corey Conners",
-        "Chris Gotterup",
-        "Ludvig Åberg",
-      ],
+      the_masters: ["Scottie Scheffler", "Bryson DeChambeau", "Corey Conners", "Chris Gotterup", "Ludvig Åberg"],
       pga_championship: ["Rory McIlroy", "Ludvig Åberg", "Si Woo Kim", "Sam Burns", "Maverick McNealy"],
       us_open: ["Rory McIlroy", "Chris Gotterup", "Patrick Cantlay", "Harris English"],
       the_open: [],
@@ -184,17 +166,11 @@ const MANAGERS = [
     teamName: {
       the_masters: "re-birdie",
       pga_championship: "re-birdie",
-      us_open: "[TEAM NAME]",
+      us_open: "Pyrrhic Viktory",
       the_open: "[TEAM NAME]",
     },
     golfers: {
-      the_masters: [
-        "Bubba Watson",
-        "Keegan Bradley",
-        "Tyrrell Hatton",
-        "Sami Välimäki",
-        "Nicolai Højgaard",
-      ],
+      the_masters: ["Bubba Watson", "Keegan Bradley", "Tyrrell Hatton", "Sami Välimäki", "Nicolai Højgaard"],
       pga_championship: ["Jon Rahm", "Matt Fitzpatrick", "Robert MacIntyre", "Nicolai Højgaard", "Tyrrell Hatton"],
       us_open: ["Matt Fitzpatrick", "Si Woo Kim", "Kurt Kitayama", "Viktor Hovland"],
       the_open: [],
