@@ -150,7 +150,7 @@ const MANAGERS = [
     teamName: {
       the_masters: "I'm Brandon!",
       pga_championship: "Glory for Rory",
-      us_open: "[TEAM NAME]",
+      us_open: "Glory for Rory",
       the_open: "[TEAM NAME]",
     },
     golfers: {
@@ -198,7 +198,7 @@ const MANAGERS = [
     teamName: {
       the_masters: "[TEAM NAME]",
       pga_championship: "Team Sweet Tee",
-      us_open: "[TEAM NAME]",
+      us_open: "Team Sweet Tee",
       the_open: "[TEAM NAME]",
     },
     golfers: {
@@ -214,7 +214,7 @@ const MANAGERS = [
     teamName: {
       the_masters: "[TEAM NAME]",
       pga_championship: "[TEAM NAME]",
-      us_open: "[TEAM NAME]",
+      us_open: "Download more Rahm",
       the_open: "[TEAM NAME]",
     },
     golfers: {
@@ -230,7 +230,7 @@ const MANAGERS = [
     teamName: {
       the_masters: "[TEAM NAME]",
       pga_championship: "[TEAM NAME]",
-      us_open: "[TEAM NAME]",
+      us_open: "The X-Men",
       the_open: "[TEAM NAME]",
     },
     golfers: {
